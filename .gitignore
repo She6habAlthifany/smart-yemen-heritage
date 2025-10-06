@@ -1,5 +1,33 @@
+
+# macOS
+.DS_Store
+
+# Python
 __pycache__/
 *.pyc
-*.h5
 .env
-node_modules/
+env/
+
+# Flutter / Dart
+.dart_tool/
+.packages
+build/
+.idea/
+.vscode/
+
+# Unity
+[Ll]ibrary/
+Temp/
+Obj/
+Build/
+Builds/
+Logs/
+UserSettings/
+MemoryCaptures/
+*.csproj
+*.sln
+
+# common
+*.zip
+*.apk
+*.aab
