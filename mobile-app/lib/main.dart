@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/features/schedule/schedule_screen.dart';
-import 'package:frontend/features/schedule2/schedule2_screen.dart';
+import 'package:yemen_old_history/features/schedule/schedule_screen.dart';
+import 'package:yemen_old_history/features/schedule2/schedule2_screen.dart';
 import 'core/constants/app_colors.dart';
 
 //  استيراد الصفحات
