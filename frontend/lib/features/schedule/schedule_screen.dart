@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/features/home/home_screen.dart';
-import 'details/details_screen.dart';
-import 'details/details_bab_yemen.dart';
-import 'details/details_hadramout.dart';
+import '../../models/content_model.dart';
+import '../../services/content_service.dart';
+import 'details/content_details_screen.dart';
 
 class ScheduleScreen extends StatefulWidget {
   const ScheduleScreen({super.key});
@@ -12,228 +11,144 @@ class ScheduleScreen extends StatefulWidget {
 }
 
 class _ScheduleScreenState extends State<ScheduleScreen> {
-  int _selectedIndex = 1;
+  late Future<List<Content>> _contentsFuture;
 
-  // 🏛️ قائمة المعالم
-  final List<Map<String, dynamic>> landmarks = [
-    {
-      'placeId': '1',
-      'name': 'دار الحجر',
-      'location': 'وادي ظهر شمال غرب صنعاء',
-      'image': 'assets/images/dar_alhajar.jpg',
-      'description': 'يقع دار الحجر في وادي ظهر شمال غرب صنعاء، وهو من أهم المعالم التاريخية...',
-      'images': [
-        'assets/images/dar_alhajar1.jpg',
-        'assets/images/dar_alhajar2.jpg',
-        'assets/images/dar_alhajar3.jpg',
-      ],
-    },
-    {
-      'placeId': '2',
-      'name': 'باب اليمن',
-      'location': 'صنعاء القديمة - محافظة صنعاء',
-      'image': 'assets/images/bab_yemen.jpg',
-      'description': 'باب اليمن من أشهر معالم صنعاء القديمة...',
-      'images': [
-        'assets/images/bab_yemen1.jpg',
-        'assets/images/bab_yemen2.jpg',
-      ],
-    },
-    {
-      'placeId': '3',
-      'name': 'شبام حضرموت',
-      'location': 'وادي حضرموت شرق اليمن',
-      'image': 'assets/images/hadramout.jpg',
-      'description': 'شبام حضرموت مدينة تاريخية تُسمى منهاتن الصحراء...',
-      'images': [
-        'assets/images/hadramout1.jpg',
-        'assets/images/hadramout2.jpg',
-      ],
-    }
+  // 🔹 صور افتراضية من assets
+  final List<String> defaultImages = [
+    "assets/images/dar_alhajar.jpg",
+    "assets/images/bab_yemen.jpg",
+    "assets/images/hadramout.jpg",
   ];
 
-  void _onItemTapped(int index) {
-    setState(() => _selectedIndex = index);
-    if (index == 0) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomeScreen(userName: '',)),
+  @override
+  void initState() {
+    super.initState();
+    _contentsFuture = ContentService.fetchContents();
+  }
+
+  // 🔹 دالة عرض الصورة من API أو assets
+  Widget buildImage(String? imageUrl, int index) {
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      return Image.network(
+        imageUrl,
+        width: 80,
+        height: 80,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Image.asset(
+            defaultImages[index % defaultImages.length],
+            width: 80,
+            height: 80,
+            fit: BoxFit.cover,
+          );
+        },
       );
     }
+
+    return Image.asset(
+      defaultImages[index % defaultImages.length],
+      width: 80,
+      height: 80,
+      fit: BoxFit.cover,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFBE9D0),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // 🔹 الشريط العلوي
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.arrow_back, color: Colors.brown),
-                  ),
-                  const Icon(Icons.notifications_none, color: Colors.brown),
-                ],
-              ),
+      appBar: AppBar(
+        backgroundColor: Colors.brown,
+        title: const Text("المعالم التاريخية"),
+      ),
+      body: FutureBuilder<List<Content>>(
+        future: _contentsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text("حدث خطأ: ${snapshot.error}"));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text("لا توجد معالم متاحة"));
+          }
 
-              const SizedBox(height: 10),
+          final contents = snapshot.data!;
 
-              // 🔹 العنوان
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
-                  Text(
-                    "المعالم التاريخية",
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.brown,
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: contents.length,
+            itemBuilder: (context, index) {
+              final item = contents[index];
+
+              return GestureDetector(
+                onTap: () {
+                  // عند الضغط، انتقل لصفحة ContentDetailsScreen مع contentId
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ContentDetailsScreen(contentId: item.id),
                     ),
+                  );
+                },
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFA0522D),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  Text(
-                    "عرض الكل",
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.brown,
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              // 🔹 قائمة المعالم
-              Expanded(
-                child: ListView.builder(
-                  itemCount: landmarks.length,
-                  itemBuilder: (context, index) {
-                    final item = landmarks[index];
-
-                    return GestureDetector(
-                      onTap: () {
-                        // 🟢 تحديد الصفحة حسب placeId
-                        if (item['placeId'] == '1') {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => DetailsScreen(
-                                placeId: item['placeId'],
-                                title: item['name'],
-                                image: item['image'],
-                                description: item['description'],
-                                images: List<String>.from(item['images']),
-                              ),
-                            ),
-                          );
-                        } else if (item['placeId'] == '2') {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const DetailsBabYemen()),
-                          );
-                        } else if (item['placeId'] == '3') {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const DetailsHadramout()),
-                          );
-                        }
-                      },
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFA0522D),
-                          borderRadius: BorderRadius.circular(16),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Row(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: buildImage(item.imageUrl, index),
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(10),
-                          child: Row(
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: Image.asset(
-                                  item['image'],
-                                  width: 80,
-                                  height: 80,
-                                  fit: BoxFit.cover,
+                              Text(
+                                item.title,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                              const SizedBox(height: 6),
+                              if (item.address != null)
+                                Row(
                                   children: [
-                                    Text(
-                                      item['name'],
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Row(
-                                      children: [
-                                        const Icon(Icons.location_on,
-                                            color: Colors.white, size: 16),
-                                        const SizedBox(width: 4),
-                                        Flexible(
-                                          child: Text(
-                                            item['location'],
-                                            style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 13,
-                                            ),
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
+                                    const Icon(Icons.location_on,
+                                        color: Colors.white, size: 16),
+                                    const SizedBox(width: 4),
+                                    Flexible(
+                                      child: Text(
+                                        item.address!,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 13,
                                         ),
-                                      ],
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
                                   ],
                                 ),
-                              ),
-                              const Icon(Icons.arrow_forward_ios,
-                                  color: Colors.white, size: 16),
                             ],
                           ),
                         ),
-                      ),
-                    );
-                  },
+                        const Icon(Icons.arrow_forward_ios,
+                            color: Colors.white, size: 16),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ),
-      ),
-
-      // 🔹 شريط التنقل السفلي
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.white,
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.brown,
-        unselectedItemColor: Colors.brown[200],
-        onTap: _onItemTapped,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'الصفحة الرئيسية',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'الملف الشخصي',
-          ),
-        ],
+              );
+            },
+          );
+        },
       ),
     );
   }
