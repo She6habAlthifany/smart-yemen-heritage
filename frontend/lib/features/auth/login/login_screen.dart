@@ -58,8 +58,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          MaterialPageRoute(builder: (context) => HomeScreen(
+            userName: data["user"]["user_name"],
+          )),
         );
+
       } else {
         _showMessage(data["message"] ?? "بيانات الدخول غير صحيحة", false);
       }

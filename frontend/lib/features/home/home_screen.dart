@@ -2,14 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:frontend/features/assistant/smart_assistant_screen.dart';
 import 'package:frontend/features/schedule2/schedule2_screen.dart';
 import '../../core/constants/app_colors.dart';
+import '../schedule/details/details_bab_yemen.dart';
 import '../schedule/schedule_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final String userName;
+
+  const HomeScreen({super.key, required this.userName});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
+
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
@@ -64,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  "Shehab",
+                  widget.userName,
                   style: TextStyle(
                     color: AppColors.textDark,
                     fontWeight: FontWeight.bold,
@@ -175,12 +179,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 itemBuilder: (context, index) {
                   return GestureDetector(
                     onTap: () {
-                      // عند الضغط على أي كارت يذهب لصفحة المعالم
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const ScheduleScreen()),
-                      );
+                      if (index % 2 == 0) {
+                        // هذا هو كرت "باب اليمن"
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const DetailsBabYemen()),
+                        );
+                      } else {
+                        // هذا هو كرت "دار الحجر"
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const ScheduleScreen()),
+                        );
+                      }
                     },
+
                     child: _placeCard(
                       image: "assets/images/place${index % 2 + 1}.jpg",
                       title: index % 2 == 0 ? "باب اليمن" : "دار الحجر",

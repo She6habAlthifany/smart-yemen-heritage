@@ -41,7 +41,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     if (index == 0) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        MaterialPageRoute(builder: (_) => const HomeScreen(userName: '',)),
       );
 
     }
