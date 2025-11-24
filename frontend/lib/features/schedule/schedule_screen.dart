@@ -12,28 +12,44 @@ class ScheduleScreen extends StatefulWidget {
 }
 
 class _ScheduleScreenState extends State<ScheduleScreen> {
-  int _selectedIndex = 1; // لأننا في صفحة البحث
+  int _selectedIndex = 1;
 
   // 🏛️ قائمة المعالم
   final List<Map<String, dynamic>> landmarks = [
     {
+      'placeId': '1',
       'name': 'دار الحجر',
       'location': 'وادي ظهر شمال غرب صنعاء',
       'image': 'assets/images/dar_alhajar.jpg',
-      'page': const DetailsScreen(),
+      'description': 'يقع دار الحجر في وادي ظهر شمال غرب صنعاء، وهو من أهم المعالم التاريخية...',
+      'images': [
+        'assets/images/dar_alhajar1.jpg',
+        'assets/images/dar_alhajar2.jpg',
+        'assets/images/dar_alhajar3.jpg',
+      ],
     },
     {
+      'placeId': '2',
       'name': 'باب اليمن',
       'location': 'صنعاء القديمة - محافظة صنعاء',
       'image': 'assets/images/bab_yemen.jpg',
-      'page': const DetailsBabYemen(),
+      'description': 'باب اليمن من أشهر معالم صنعاء القديمة...',
+      'images': [
+        'assets/images/bab_yemen1.jpg',
+        'assets/images/bab_yemen2.jpg',
+      ],
     },
     {
+      'placeId': '3',
       'name': 'شبام حضرموت',
       'location': 'وادي حضرموت شرق اليمن',
       'image': 'assets/images/hadramout.jpg',
-      'page': const DetailsHadramout(),
-    },
+      'description': 'شبام حضرموت مدينة تاريخية تُسمى منهاتن الصحراء...',
+      'images': [
+        'assets/images/hadramout1.jpg',
+        'assets/images/hadramout2.jpg',
+      ],
+    }
   ];
 
   void _onItemTapped(int index) {
@@ -43,7 +59,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
         context,
         MaterialPageRoute(builder: (_) => const HomeScreen()),
       );
-
     }
   }
 
@@ -68,6 +83,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   const Icon(Icons.notifications_none, color: Colors.brown),
                 ],
               ),
+
               const SizedBox(height: 10),
 
               // 🔹 العنوان
@@ -91,6 +107,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   ),
                 ],
               ),
+
               const SizedBox(height: 20),
 
               // 🔹 قائمة المعالم
@@ -99,12 +116,34 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   itemCount: landmarks.length,
                   itemBuilder: (context, index) {
                     final item = landmarks[index];
+
                     return GestureDetector(
                       onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => item['page']),
-                        );
+                        // 🟢 تحديد الصفحة حسب placeId
+                        if (item['placeId'] == '1') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => DetailsScreen(
+                                placeId: item['placeId'],
+                                title: item['name'],
+                                image: item['image'],
+                                description: item['description'],
+                                images: List<String>.from(item['images']),
+                              ),
+                            ),
+                          );
+                        } else if (item['placeId'] == '2') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const DetailsBabYemen()),
+                          );
+                        } else if (item['placeId'] == '3') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const DetailsHadramout()),
+                          );
+                        }
                       },
                       child: Container(
                         margin: const EdgeInsets.only(bottom: 16),
@@ -148,8 +187,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                           child: Text(
                                             item['location'],
                                             style: const TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 13),
+                                              color: Colors.white,
+                                              fontSize: 13,
+                                            ),
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                         ),

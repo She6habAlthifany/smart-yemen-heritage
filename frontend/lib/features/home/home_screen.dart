@@ -31,17 +31,12 @@ class _HomeScreenState extends State<HomeScreen> {
         );
         break;
       case 2:
-      // المفضلة (لاحقاً)
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('قريباً سيتم إضافة صفحة المفضلة ❤️')),
-        );
+        Navigator.pushNamed(context, '/favorites');
         break;
       case 3:
-      // الملف الشخصي (لاحقاً)
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('قريباً سيتم إضافة صفحة الملف الشخصي 👤')),
-        );
+        Navigator.pushNamed(context, '/profile');
         break;
+
     }
   }
 
