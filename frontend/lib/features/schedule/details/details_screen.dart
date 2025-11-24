@@ -3,7 +3,7 @@ import 'package:frontend/features/assistant/smart_assistant_screen.dart';
 import '../../ar/ar_view_screen.dart';
 
 class DetailsScreen extends StatelessWidget {
-  const DetailsScreen({super.key});
+  const DetailsScreen({super.key, required placeId, required title, required image, required description, required List<String> images});
 
   void _showSmartAssistantPopup(BuildContext context) {
     showDialog(
