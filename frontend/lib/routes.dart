@@ -9,7 +9,7 @@ class AppRoutes {
   static const home = '/home';
 
   static Map<String, WidgetBuilder> routes = {
-    login: (context) => const LoginScreen(),
+    login: (context) => const LoginPage(),
     signup: (context) => const SignupScreen(),
     home: (context) => const HomeScreen(userName: '',),
   };

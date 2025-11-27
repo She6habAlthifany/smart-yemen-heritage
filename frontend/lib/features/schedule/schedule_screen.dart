@@ -3,6 +3,12 @@ import '../../models/content_model.dart';
 import '../../services/content_service.dart';
 import 'details/content_details_screen.dart';
 
+// تعريف الألوان الحديثة
+// تم تحديث اللون الأساسي ليتناسب مع اللون الترابي/الذهبي الغامق في الصورة المرفقة
+const Color _primaryColor = Color(0xFFCD853F); // لون ترابي دافئ (Peruvian Brown)
+const Color _backgroundColor = Colors.white; // اللون الأبيض للخلفية
+const Color _cardColor = Colors.white; // لون البطاقة (أبيض)
+
 class ScheduleScreen extends StatefulWidget {
   const ScheduleScreen({super.key});
 
@@ -56,18 +62,22 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFBE9D0),
+      backgroundColor: Colors.grey.shade50, // خلفية بيضاء خفيفة جداً لتباين أفضل
       appBar: AppBar(
-        backgroundColor: Colors.brown,
-        title: const Text("المعالم التاريخية"),
+        backgroundColor: _primaryColor, // اللون الترابي الجديد لشريط التطبيق
+        title: const Text(
+          "المعالم التاريخية",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold), // نص أبيض للتباين
+        ),
+        elevation: 4, // ظل خفيف لشريط التطبيق
       ),
       body: FutureBuilder<List<Content>>(
         future: _contentsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator(color: _primaryColor)); // مؤشر باللون الجديد
           } else if (snapshot.hasError) {
-            return Center(child: Text("حدث خطأ: ${snapshot.error}"));
+            return Center(child: Text("حدث خطأ: ${snapshot.error}", style: const TextStyle(color: _primaryColor)));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return const Center(child: Text("لا توجد معالم متاحة"));
           }
@@ -93,11 +103,20 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 child: Container(
                   margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFA0522D),
+                    color: _cardColor, // لون البطاقة أبيض
                     borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: _primaryColor.withOpacity(0.5), width: 1), // حدود بلون ترابي خفيف
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.15), // ظل أغمق قليلاً
+                        spreadRadius: 0,
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(12),
                     child: Row(
                       children: [
                         ClipRRect(
@@ -112,7 +131,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                               Text(
                                 item.title,
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: _primaryColor, // نص بلون ترابي على خلفية بيضاء
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -122,13 +141,13 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                 Row(
                                   children: [
                                     const Icon(Icons.location_on,
-                                        color: Colors.white, size: 16),
+                                        color: Colors.grey, size: 16), // أيقونة بلون رمادي على خلفية بيضاء
                                     const SizedBox(width: 4),
                                     Flexible(
                                       child: Text(
                                         item.address!,
                                         style: const TextStyle(
-                                          color: Colors.white,
+                                          color: Colors.grey, // نص رمادي
                                           fontSize: 13,
                                         ),
                                         overflow: TextOverflow.ellipsis,
@@ -140,7 +159,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                           ),
                         ),
                         const Icon(Icons.arrow_forward_ios,
-                            color: Colors.white, size: 16),
+                            color: _primaryColor, size: 16), // أيقونة بلون ترابي
                       ],
                     ),
                   ),

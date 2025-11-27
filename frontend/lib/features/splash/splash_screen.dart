@@ -28,7 +28,7 @@ class _SplashScreenState extends State<SplashScreen>
   void _setupAnimations() {
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 5000),
     );
 
     _fadeAnimation = Tween<double>(
@@ -186,18 +186,20 @@ class _SplashScreenState extends State<SplashScreen>
                 const SizedBox(height: 24),
 
                 Text(
-                  'Yemen Heritage',
+                  '𐩬𐩣𐩺𐩡𐩱 𐩻𐩧𐩩',
                   style: TextStyle(
+                    fontFamily: 'OldSouthArabian',
                     color: AppColors.primary,
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
 
+
                 const SizedBox(height: 8),
 
                 Text(
-                  'Preserving Ancient Civilization',
+                  'الموسوعة الذكية في تاريخ اليمن القديم',
                   style: TextStyle(
                     color: AppColors.textDark,
                     fontSize: 16,
