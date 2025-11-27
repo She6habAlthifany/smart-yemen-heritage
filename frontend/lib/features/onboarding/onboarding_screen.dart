@@ -16,17 +16,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<Map<String, String>> pages = [
     {
-      "image": "assets/images/on1.png",
+      "image": "assets/images/on1.jpg",
       "title": "اكتشف تاريخ اليمن",
       "desc": "تعرف على الحضارات اليمنية القديمة بطريقة تفاعلية."
     },
     {
-      "image": "assets/images/on2.png",
+      "image": "assets/images/on2.jpg",
       "title": "واقع معزز",
       "desc": "اعرض المجسمات التاريخية وكأنها أمامك."
     },
     {
-      "image": "assets/images/on3.png",
+      "image": "assets/images/on3.jpg",
       "title": "موسوعة ذكية",
       "desc": "مساعد ذكي يقدم لك المعلومات التاريخية."
     },
@@ -72,7 +72,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 itemBuilder: (_, i) {
                   return Column(
                     children: [
-                      Image.asset(pages[i]["image"]!, height: 250),
+                      Image.asset(pages[i]["image"]!, height: 280),
                       const SizedBox(height: 20),
                       Text(
                         pages[i]["title"]!,

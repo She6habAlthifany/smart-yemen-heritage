@@ -11,17 +11,17 @@ class OnboardingController {
     OnboardingPageModel(
       title: "مرحبا بك في الموسوعة الذكية",
       description: "استكشف تاريخ اليمن القديم بطريقة تفاعلية",
-      image: "assets/onboarding/on1.png",
+      image: "assets/images/on1.jpg",
     ),
     OnboardingPageModel(
       title: "تعرف على الممالك القديمة",
       description: "سبأ، معين، حمير، قتبان والمزيد",
-      image: "assets/onboarding/on2.png",
+      image: "assets/images/on2.jpg",
     ),
     OnboardingPageModel(
       title: "الواقع المعزز",
       description: "شاهد المعالم اليمنية بتقنية AR",
-      image: "assets/onboarding/on3.png",
+      image: "assets/images/on3.jpg",
     ),
   ];
 
