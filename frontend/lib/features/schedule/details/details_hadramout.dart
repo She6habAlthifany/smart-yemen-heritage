@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/features/ar/ar_view_screen.dart';
 import 'package:frontend/features/assistant/smart_assistant_screen.dart';
+import '../../../core/services/favorites_manager.dart';
+import '../../ar/ar_view_screen.dart';
 
 class DetailsHadramout extends StatelessWidget {
   const DetailsHadramout({super.key});
+
   void _showSmartAssistantPopup(BuildContext context) {
     showDialog(
       context: context,
@@ -11,8 +13,7 @@ class DetailsHadramout extends StatelessWidget {
       builder: (context) {
         return Dialog(
           backgroundColor: Colors.white,
-          shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           insetPadding: const EdgeInsets.all(20),
           child: SizedBox(
             height: 500,
@@ -22,20 +23,15 @@ class DetailsHadramout extends StatelessWidget {
                 Container(
                   decoration: const BoxDecoration(
                     color: Color(0xFF8B5E3C),
-                    borderRadius:
-                    BorderRadius.vertical(top: Radius.circular(20)),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                   ),
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
                         'المساعد الذكي',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16),
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                       IconButton(
                         icon: const Icon(Icons.close, color: Colors.white),
@@ -44,9 +40,7 @@ class DetailsHadramout extends StatelessWidget {
                     ],
                   ),
                 ),
-                const Expanded(
-                  child: SmartAssistantScreen(),
-                ),
+                const Expanded(child: SmartAssistantScreen()),
               ],
             ),
           ),
@@ -54,8 +48,14 @@ class DetailsHadramout extends StatelessWidget {
       },
     );
   }
+
   @override
   Widget build(BuildContext context) {
+    // نستخدم معرف ثابت للمكان لكي تحفظه المفضلة بشكل صحيح
+    const placeId = 'hadramout';
+    const placeTitle = 'شبام حضرموت';
+    const placeImage = 'assets/images/hadramout.jpg';
+
     return Scaffold(
       backgroundColor: const Color(0xFFFBE9D0),
       body: SingleChildScrollView(
@@ -86,8 +86,19 @@ class DetailsHadramout extends StatelessWidget {
                   child: CircleAvatar(
                     backgroundColor: Colors.black54,
                     child: IconButton(
-                      icon: const Icon(Icons.favorite_border, color: Colors.white),
-                      onPressed: () {},
+                      icon: Icon(
+                        FavoritesManager.instance.isFavorite(placeId)
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color: Colors.red,
+                      ),
+                      onPressed: () {
+                        // نمرّر أيضاً العنوان والصورة حتى نتمكن من عرضها في شاشة المفضلة لاحقاً
+                        FavoritesManager.instance.toggleFavorite(placeId,
+                            title: placeTitle, image: placeImage);
+                        // نجبر إعادة رسم الواجهة ليتغيّر شكل الأيقونة
+                        (context as Element).markNeedsBuild();
+                      },
                     ),
                   ),
                 ),
@@ -184,11 +195,11 @@ class DetailsHadramout extends StatelessWidget {
                         children: [
                           IconButton(
                             onPressed: () {
-                              _showSmartAssistantPopup(context);                            },
+                              _showSmartAssistantPopup(context);
+                            },
                             icon: const Icon(Icons.record_voice_over, color: Colors.brown, size: 30),
                           ),
-                          const Text('المساعد الذكي',
-                              style: TextStyle(color: Colors.brown, fontSize: 13)),
+                          const Text('المساعد الذكي', style: TextStyle(color: Colors.brown, fontSize: 13)),
                         ],
                       ),
                       Column(
@@ -204,8 +215,7 @@ class DetailsHadramout extends StatelessWidget {
                             },
                             icon: const Icon(Icons.vrpano_outlined, color: Colors.brown, size: 30),
                           ),
-                          const Text('الواقع المعزز',
-                              style: TextStyle(color: Colors.brown, fontSize: 13)),
+                          const Text('الواقع المعزز', style: TextStyle(color: Colors.brown, fontSize: 13)),
                         ],
                       ),
                       Column(
@@ -215,8 +225,7 @@ class DetailsHadramout extends StatelessWidget {
                               showModalBottomSheet(
                                 context: context,
                                 shape: const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.vertical(
-                                      top: Radius.circular(20)),
+                                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                                 ),
                                 builder: (context) => Padding(
                                   padding: const EdgeInsets.all(16),
@@ -224,31 +233,18 @@ class DetailsHadramout extends StatelessWidget {
                                     mainAxisSize: MainAxisSize.min,
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
-                                      const Text(
-                                        "إضافة تعليق",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                        ),
-                                      ),
+                                      const Text("إضافة تعليق", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                                       const SizedBox(height: 10),
                                       TextField(
                                         textAlign: TextAlign.right,
-                                        decoration: const InputDecoration(
-                                          hintText: "اكتب تعليقك هنا...",
-                                          border: OutlineInputBorder(),
-                                        ),
+                                        decoration: const InputDecoration(hintText: "اكتب تعليقك هنا...", border: OutlineInputBorder()),
                                       ),
                                       const SizedBox(height: 10),
                                       Align(
                                         alignment: Alignment.centerLeft,
                                         child: ElevatedButton(
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.brown,
-                                          ),
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                          },
+                                          style: ElevatedButton.styleFrom(backgroundColor: Colors.brown),
+                                          onPressed: () => Navigator.pop(context),
                                           child: const Text("إرسال"),
                                         ),
                                       ),
@@ -259,8 +255,7 @@ class DetailsHadramout extends StatelessWidget {
                             },
                             icon: const Icon(Icons.comment, color: Colors.brown, size: 30),
                           ),
-                          const Text('إضافة تعليق',
-                              style: TextStyle(color: Colors.brown, fontSize: 13)),
+                          const Text('إضافة تعليق', style: TextStyle(color: Colors.brown, fontSize: 13)),
                         ],
                       ),
                     ],

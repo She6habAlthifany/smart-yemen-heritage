@@ -1,42 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/features/ar/ar_view_screen.dart';
 import 'package:frontend/features/assistant/smart_assistant_screen.dart';
-import 'package:frontend/widgets/smart_assistant_wrapper.dart';
+import '../../../core/services/favorites_manager.dart';
 
 class DetailsSayoon extends StatelessWidget {
   const DetailsSayoon({super.key});
+
   void _showSmartAssistantPopup(BuildContext context) {
     showDialog(
       context: context,
-      barrierDismissible: true, // يمكن إغلاقه بالضغط خارج النافذة
+      barrierDismissible: true,
       builder: (context) {
         return Dialog(
           backgroundColor: Colors.white,
-          shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           insetPadding: const EdgeInsets.all(20),
           child: SizedBox(
             height: 500,
             child: Column(
               children: [
-                // العنوان وشريط الإغلاق
                 Container(
                   decoration: const BoxDecoration(
                     color: Color(0xFF8B5E3C),
-                    borderRadius:
-                    BorderRadius.vertical(top: Radius.circular(20)),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                   ),
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
                         'المساعد الذكي',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16),
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                       IconButton(
                         icon: const Icon(Icons.close, color: Colors.white),
@@ -45,9 +39,7 @@ class DetailsSayoon extends StatelessWidget {
                     ],
                   ),
                 ),
-                const Expanded(
-                  child: SmartAssistantScreen(),
-                ),
+                const Expanded(child: SmartAssistantScreen()),
               ],
             ),
           ),
@@ -55,14 +47,18 @@ class DetailsSayoon extends StatelessWidget {
       },
     );
   }
+
   @override
   Widget build(BuildContext context) {
+    const placeId = 'sayoon';
+    const placeTitle = 'قصر سيئون';
+    const placeImage = 'assets/images/sayoon.jpg';
+
     return Scaffold(
       backgroundColor: const Color(0xFFFBE9D0),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // 🔹 الصورة الرئيسية مع الأزرار العلوية
             Stack(
               children: [
                 Image.asset(
@@ -88,15 +84,25 @@ class DetailsSayoon extends StatelessWidget {
                   child: CircleAvatar(
                     backgroundColor: Colors.black54,
                     child: IconButton(
-                      icon: const Icon(Icons.favorite_border, color: Colors.white),
-                      onPressed: () {},
+                      icon: Icon(
+                        FavoritesManager.instance.isFavorite(placeId)
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color: Colors.red,
+                      ),
+                      onPressed: () {
+                        FavoritesManager.instance.toggleFavorite(
+                          placeId,
+                          title: placeTitle,
+                          image: placeImage,
+                        );
+                        (context as Element).markNeedsBuild();
+                      },
                     ),
                   ),
                 ),
               ],
             ),
-
-            // 🔹 المحتوى السفلي
             Container(
               width: double.infinity,
               decoration: const BoxDecoration(
@@ -107,7 +113,6 @@ class DetailsSayoon extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 🔹 العنوان والصورة الصغيرة
                   Row(
                     children: [
                       const CircleAvatar(
@@ -128,12 +133,8 @@ class DetailsSayoon extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 10),
-
-                  const Text('المشاهدة بالواقع المعزز',
-                      style: TextStyle(color: Colors.brown, fontSize: 14)),
+                  const Text('المشاهدة بالواقع المعزز', style: TextStyle(color: Colors.brown, fontSize: 14)),
                   const SizedBox(height: 15),
-
-                  // 🔹 صور أفقية
                   SizedBox(
                     height: 70,
                     child: ListView(
@@ -154,26 +155,18 @@ class DetailsSayoon extends StatelessWidget {
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 20),
-
-                  // 🔹 نص "عن قصر سيئون"
                   Row(
                     children: const [
                       Icon(Icons.info, color: Colors.brown),
                       SizedBox(width: 5),
                       Text(
                         'عن قصر سيئون',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.brown,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: TextStyle(fontSize: 18, color: Colors.brown, fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
                   const SizedBox(height: 10),
-
                   const Text(
                     'قصر سيئون هو أحد أبرز المعالم التاريخية في حضرموت، ويُعد من أكبر القصور الطينية في العالم. '
                         'كان مقراً للسلطان الكثيري، ويتميز بطرازه المعماري الفريد من الطين والجص. '
@@ -181,40 +174,28 @@ class DetailsSayoon extends StatelessWidget {
                     textAlign: TextAlign.justify,
                     style: TextStyle(fontSize: 16, color: Colors.brown, height: 1.6),
                   ),
-
                   const SizedBox(height: 25),
-
-                  // 🔹 الأزرار الثلاثة السفلية
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       Column(
                         children: [
                           IconButton(
-                            onPressed: () {
-                              _showSmartAssistantPopup(context);
-                            },
+                            onPressed: () => _showSmartAssistantPopup(context),
                             icon: const Icon(Icons.record_voice_over, color: Colors.brown, size: 30),
                           ),
-                          const Text('المساعد الذكي',
-                              style: TextStyle(color: Colors.brown, fontSize: 13)),
+                          const Text('المساعد الذكي', style: TextStyle(color: Colors.brown, fontSize: 13)),
                         ],
                       ),
                       Column(
                         children: [
                           IconButton(
                             onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const ARViewScreen(),
-                                ),
-                              );
+                              Navigator.push(context, MaterialPageRoute(builder: (context) => const ARViewScreen()));
                             },
                             icon: const Icon(Icons.vrpano_outlined, color: Colors.brown, size: 30),
                           ),
-                          const Text('الواقع المعزز',
-                              style: TextStyle(color: Colors.brown, fontSize: 13)),
+                          const Text('الواقع المعزز', style: TextStyle(color: Colors.brown, fontSize: 13)),
                         ],
                       ),
                       Column(
@@ -223,41 +204,25 @@ class DetailsSayoon extends StatelessWidget {
                             onPressed: () {
                               showModalBottomSheet(
                                 context: context,
-                                shape: const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.vertical(
-                                      top: Radius.circular(20)),
-                                ),
+                                shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
                                 builder: (context) => Padding(
                                   padding: const EdgeInsets.all(16),
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
-                                      const Text(
-                                        "إضافة تعليق",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                        ),
-                                      ),
+                                      const Text("إضافة تعليق", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                                       const SizedBox(height: 10),
                                       TextField(
                                         textAlign: TextAlign.right,
-                                        decoration: const InputDecoration(
-                                          hintText: "اكتب تعليقك هنا...",
-                                          border: OutlineInputBorder(),
-                                        ),
+                                        decoration: const InputDecoration(hintText: "اكتب تعليقك هنا...", border: OutlineInputBorder()),
                                       ),
                                       const SizedBox(height: 10),
                                       Align(
                                         alignment: Alignment.centerLeft,
                                         child: ElevatedButton(
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.brown,
-                                          ),
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                          },
+                                          style: ElevatedButton.styleFrom(backgroundColor: Colors.brown),
+                                          onPressed: () => Navigator.pop(context),
                                           child: const Text("إرسال"),
                                         ),
                                       ),
@@ -268,8 +233,7 @@ class DetailsSayoon extends StatelessWidget {
                             },
                             icon: const Icon(Icons.comment, color: Colors.brown, size: 30),
                           ),
-                          const Text('إضافة تعليق',
-                              style: TextStyle(color: Colors.brown, fontSize: 13)),
+                          const Text('إضافة تعليق', style: TextStyle(color: Colors.brown, fontSize: 13)),
                         ],
                       ),
                     ],

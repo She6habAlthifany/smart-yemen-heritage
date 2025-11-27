@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/features/assistant/smart_assistant_screen.dart';
+import '../../../core/services/favorites_manager.dart';
 import '../../ar/ar_view_screen.dart';
 
 class DetailsScreen extends StatelessWidget {
-  const DetailsScreen({super.key, required placeId, required title, required image, required description, required List<String> images});
+  const DetailsScreen({super.key, required placeId, required title, required image, required description, required List images}); // لم نغير واجهة المستخدم هنا حسب طلبك
 
   void _showSmartAssistantPopup(BuildContext context) {
     showDialog(
@@ -12,8 +13,7 @@ class DetailsScreen extends StatelessWidget {
       builder: (context) {
         return Dialog(
           backgroundColor: Colors.white,
-          shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           insetPadding: const EdgeInsets.all(20),
           child: SizedBox(
             height: 500,
@@ -23,11 +23,9 @@ class DetailsScreen extends StatelessWidget {
                 Container(
                   decoration: const BoxDecoration(
                     color: Color(0xFF8B5E3C),
-                    borderRadius:
-                    BorderRadius.vertical(top: Radius.circular(20)),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                   ),
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -58,6 +56,11 @@ class DetailsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // نستخدم id ثابت "dar_alhajar" لأنك تريد الإبقاء على أسماء الصور والنصوص كما هي
+    const placeId = "dar_alhajar";
+    const placeTitle = 'دار الحجر';
+    const placeImage = 'assets/images/dar_alhajar.jpg';
+
     return Scaffold(
       backgroundColor: const Color(0xFFFBE9D0),
       body: SingleChildScrollView(
@@ -89,10 +92,24 @@ class DetailsScreen extends StatelessWidget {
                   child: CircleAvatar(
                     backgroundColor: Colors.black54,
                     child: IconButton(
-                      icon: const Icon(Icons.favorite_border,
-                          color: Colors.white),
-                      onPressed: () {},
+                      icon: Icon(
+                        FavoritesManager.instance.isFavorite(placeId)
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color: Colors.red,
+                      ),
+                      onPressed: () {
+                        // نمرّر id + title + image للحفظ، حتى تستعملها صفحة المفضلة لاحقًا
+                        FavoritesManager.instance.toggleFavorite(
+                          placeId,
+                          title: placeTitle,
+                          image: placeImage,
+                        );
+                        // نعيد بناء العنصر الحالي لتحديث أيقونة القلب
+                        (context as Element).markNeedsBuild();
+                      },
                     ),
+
                   ),
                 ),
               ],
@@ -191,50 +208,35 @@ class DetailsScreen extends StatelessWidget {
                         color: Colors.brown,
                         height: 1.6),
                   ),
+
                   const SizedBox(height: 25),
 
-                  // الأزرار السفليّة
+                  // الأزرار السفليّة (المساعد الذكي - الواقع المعزز - إضافة تعليق)
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      // 🧠 المساعد الذكي
                       Column(
                         children: [
                           IconButton(
                             onPressed: () {
                               _showSmartAssistantPopup(context);
                             },
-                            icon: const Icon(Icons.record_voice_over,
-                                color: Colors.brown, size: 30),
+                            icon: const Icon(Icons.record_voice_over, color: Colors.brown, size: 30),
                           ),
-                          const Text('المساعد الذكي',
-                              style: TextStyle(
-                                  color: Colors.brown, fontSize: 13)),
+                          const Text('المساعد الذكي', style: TextStyle(color: Colors.brown, fontSize: 13)),
                         ],
                       ),
-
-                      // 🕶 الواقع المعزز
                       Column(
                         children: [
                           IconButton(
                             onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) =>
-                                    const ARViewScreen()),
-                              );
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => const ARViewScreen()));
                             },
-                            icon: const Icon(Icons.vrpano_outlined,
-                                color: Colors.brown, size: 30),
+                            icon: const Icon(Icons.vrpano_outlined, color: Colors.brown, size: 30),
                           ),
-                          const Text('الواقع المعزز',
-                              style: TextStyle(
-                                  color: Colors.brown, fontSize: 13)),
+                          const Text('الواقع المعزز', style: TextStyle(color: Colors.brown, fontSize: 13)),
                         ],
                       ),
-
-                      // 💬 إضافة تعليق
                       Column(
                         children: [
                           IconButton(
@@ -242,8 +244,7 @@ class DetailsScreen extends StatelessWidget {
                               showModalBottomSheet(
                                 context: context,
                                 shape: const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.vertical(
-                                      top: Radius.circular(20)),
+                                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                                 ),
                                 builder: (context) => Padding(
                                   padding: const EdgeInsets.all(16),
@@ -251,45 +252,29 @@ class DetailsScreen extends StatelessWidget {
                                     mainAxisSize: MainAxisSize.min,
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
-                                      const Text(
-                                        "إضافة تعليق",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                        ),
-                                      ),
+                                      const Text("إضافة تعليق", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                                       const SizedBox(height: 10),
                                       TextField(
                                         textAlign: TextAlign.right,
-                                        decoration: const InputDecoration(
-                                          hintText: "اكتب تعليقك هنا...",
-                                          border: OutlineInputBorder(),
-                                        ),
+                                        decoration: const InputDecoration(hintText: "اكتب تعليقك هنا...", border: OutlineInputBorder()),
                                       ),
                                       const SizedBox(height: 10),
                                       Align(
                                         alignment: Alignment.centerLeft,
                                         child: ElevatedButton(
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.brown,
-                                          ),
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                          },
+                                          style: ElevatedButton.styleFrom(backgroundColor: Colors.brown),
+                                          onPressed: () { Navigator.pop(context); },
                                           child: const Text("إرسال"),
                                         ),
-                                      ),
+                                      )
                                     ],
                                   ),
                                 ),
                               );
                             },
-                            icon: const Icon(Icons.comment,
-                                color: Colors.brown, size: 30),
+                            icon: const Icon(Icons.comment, color: Colors.brown, size: 30),
                           ),
-                          const Text('إضافة تعليق',
-                              style: TextStyle(
-                                  color: Colors.brown, fontSize: 13)),
+                          const Text('إضافة تعليق', style: TextStyle(color: Colors.brown, fontSize: 13)),
                         ],
                       ),
                     ],

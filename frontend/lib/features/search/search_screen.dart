@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
-import '../../features/schedule/details/details_screen.dart'; // عدّل المسار
+
+// استدعاء صفحات التفاصيل
+import '../../features/schedule/details/details_screen.dart';
+import '../../features/schedule/details/details_bab_yemen.dart';
+import '../schedule2/details/details_maeen.dart';
+import '../schedule2/details/details_saba.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -13,20 +18,44 @@ class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _controller = TextEditingController();
   String _query = '';
 
-  final List<Map<String, String>> allPlaces = [
-    {'id': 'dar_alhajar', 'name': 'دار الحجر', 'image': 'assets/images/dar_alhajar.jpg', 'category': 'آثار'},
-    {'id': 'bab_yemen', 'name': 'باب اليمن', 'image': 'assets/images/bab_yemen.jpg', 'category': 'آثار'},
-    {'id': 'saba', 'name': 'مملكة سبأ', 'image': 'assets/images/saba.jpg', 'category': 'ممالك'},
-    // أضف بياناتك هنا...
+  final List<Map<String, dynamic>> allPlaces = [
+    {
+      'id': 'dar_alhajar',
+      'name': 'دار الحجر',
+      'image': 'assets/images/dar_alhajar.jpg',
+      'category': 'آثار',
+      'screen': const DetailsScreen(placeId: null, title: null, image: null, description: null, images: [],),
+    },
+    {
+      'id': 'bab_yemen',
+      'name': 'باب اليمن',
+      'image': 'assets/images/bab_yemen.jpg',
+      'category': 'آثار',
+      'screen': const DetailsBabYemen(),
+    },
+    {
+      'id': 'saba',
+      'name': 'مملكة سبأ',
+      'image': 'assets/images/saba.jpg',
+      'category': 'ممالك',
+      'screen': const DetailsSaba(),
+    },
+    {
+      'id': 'maeen',
+      'name': 'مملكة معين',
+      'image': 'assets/images/maeen.jpg',
+      'category': 'ممالك',
+      'screen': const DetailsMaeen(),
+    }
   ];
 
-  List<Map<String, String>> get results {
+  List<Map<String, dynamic>> get results {
     if (_query.trim().isEmpty) return allPlaces;
     final q = _query.trim().toLowerCase();
     return allPlaces.where((p) {
-      return p['name']!.toLowerCase().contains(q) ||
-          (p['category']?.toLowerCase().contains(q) ?? false) ||
-          (p['id']!.toLowerCase().contains(q));
+      return p['name'].toLowerCase().contains(q) ||
+          p['category'].toLowerCase().contains(q) ||
+          p['id'].toLowerCase().contains(q);
     }).toList();
   }
 
@@ -41,10 +70,17 @@ class _SearchScreenState extends State<SearchScreen> {
           autofocus: true,
           textAlign: TextAlign.right,
           style: const TextStyle(color: Colors.white),
-          decoration: const InputDecoration(border: InputBorder.none, hintText: 'ابحث...', hintStyle: TextStyle(color: Colors.white70)),
+          decoration: const InputDecoration(
+            border: InputBorder.none,
+            hintText: 'ابحث...',
+            hintStyle: TextStyle(color: Colors.white70),
+          ),
           onChanged: (v) => setState(() => _query = v),
         ),
-        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.pop(context)),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(12),
@@ -53,12 +89,14 @@ class _SearchScreenState extends State<SearchScreen> {
           final p = results[i];
           return Card(
             child: ListTile(
-              leading: Image.asset(p['image']!, width: 60, fit: BoxFit.cover),
-              title: Text(p['name']!, textAlign: TextAlign.right),
-              subtitle: Text(p['category'] ?? '', textAlign: TextAlign.right),
+              leading: Image.asset(p['image'], width: 60, fit: BoxFit.cover),
+              title: Text(p['name'], textAlign: TextAlign.right),
+              subtitle: Text(p['category'], textAlign: TextAlign.right),
               onTap: () {
-                // افتح التفاصيل - هنا نفتح نفس DetailsScreen كمثال
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const DetailsScreen(placeId: null, title: null, image: null, description: null, images: [],)));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => p['screen']),
+                );
               },
             ),
           );

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/features/ar/ar_view_screen.dart';
 import 'package:frontend/features/assistant/smart_assistant_screen.dart';
-import 'package:frontend/widgets/smart_assistant_wrapper.dart';
+import '../../../core/services/favorites_manager.dart';
 
 class DetailsSaba extends StatelessWidget {
   const DetailsSaba({super.key});
@@ -23,8 +23,7 @@ class DetailsSaba extends StatelessWidget {
                 Container(
                   decoration: const BoxDecoration(
                     color: Color(0xFF8B5E3C),
-                    borderRadius:
-                    BorderRadius.vertical(top: Radius.circular(20)),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                   ),
                   padding:
                   const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -55,8 +54,14 @@ class DetailsSaba extends StatelessWidget {
       },
     );
   }
+
   @override
   Widget build(BuildContext context) {
+    // معرف ثابت للمكان + بيانات العنوان والصورة (نستخدمها عند حفظ المفضلة)
+    const placeId = 'saba';
+    const placeTitle = 'مملكة سبأ';
+    const placeImage = 'assets/images/saba.jpg';
+
     return Scaffold(
       backgroundColor: const Color(0xFFFBE9D0),
       body: SingleChildScrollView(
@@ -87,8 +92,22 @@ class DetailsSaba extends StatelessWidget {
                   child: CircleAvatar(
                     backgroundColor: Colors.black54,
                     child: IconButton(
-                      icon: const Icon(Icons.favorite_border, color: Colors.white),
-                      onPressed: () {},
+                      icon: Icon(
+                        FavoritesManager.instance.isFavorite(placeId)
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color: Colors.red,
+                      ),
+                      onPressed: () {
+                        // عند الضغط نغير الحالة ونمرّر title/image حتى تظهر في صفحة المفضلة
+                        FavoritesManager.instance.toggleFavorite(
+                          placeId,
+                          title: placeTitle,
+                          image: placeImage,
+                        );
+                        // لإجبار إعادة رسم الواجهة ليتغيّر شكل الأيقونة
+                        (context as Element).markNeedsBuild();
+                      },
                     ),
                   ),
                 ),
@@ -121,7 +140,13 @@ class DetailsSaba extends StatelessWidget {
                         ),
                       ),
                       const Spacer(),
-                      Icon(Icons.favorite_border, color: Colors.brown[300]),
+                      // أيقونة تُظهر الحالة الحالية أيضاً (غير متفاعلة هنا)
+                      Icon(
+                        FavoritesManager.instance.isFavorite(placeId)
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color: Colors.brown[300],
+                      ),
                     ],
                   ),
                   const SizedBox(height: 10),
@@ -144,7 +169,8 @@ class DetailsSaba extends StatelessWidget {
                             padding: const EdgeInsets.only(right: 8),
                             child: ClipRRect(
                               borderRadius: BorderRadius.circular(10),
-                              child: Image.asset(img, width: 70, height: 70, fit: BoxFit.cover),
+                              child: Image.asset(img,
+                                  width: 70, height: 70, fit: BoxFit.cover),
                             ),
                           ),
                       ],
@@ -187,7 +213,8 @@ class DetailsSaba extends StatelessWidget {
                             onPressed: () {
                               _showSmartAssistantPopup(context);
                             },
-                            icon: const Icon(Icons.record_voice_over, color: Colors.brown, size: 30),
+                            icon: const Icon(Icons.record_voice_over,
+                                color: Colors.brown, size: 30),
                           ),
                           const Text('المساعد الذكي',
                               style: TextStyle(color: Colors.brown, fontSize: 13)),
@@ -204,7 +231,8 @@ class DetailsSaba extends StatelessWidget {
                                 ),
                               );
                             },
-                            icon: const Icon(Icons.vrpano_outlined, color: Colors.brown, size: 30),
+                            icon: const Icon(Icons.vrpano_outlined,
+                                color: Colors.brown, size: 30),
                           ),
                           const Text('الواقع المعزز',
                               style: TextStyle(color: Colors.brown, fontSize: 13)),
@@ -217,8 +245,8 @@ class DetailsSaba extends StatelessWidget {
                               showModalBottomSheet(
                                 context: context,
                                 shape: const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.vertical(
-                                      top: Radius.circular(20)),
+                                  borderRadius:
+                                  BorderRadius.vertical(top: Radius.circular(20)),
                                 ),
                                 builder: (context) => Padding(
                                   padding: const EdgeInsets.all(16),
@@ -259,7 +287,8 @@ class DetailsSaba extends StatelessWidget {
                                 ),
                               );
                             },
-                            icon: const Icon(Icons.comment, color: Colors.brown, size: 30),
+                            icon: const Icon(Icons.comment,
+                                color: Colors.brown, size: 30),
                           ),
                           const Text('إضافة تعليق',
                               style: TextStyle(color: Colors.brown, fontSize: 13)),

@@ -18,6 +18,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  bool _obscurePassword = true;
   bool isLoading = false;
 
   // ===============================
@@ -35,7 +36,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       const String BASE_URL = "http://10.0.2.2:5000/api/users";
-      // << غيّره بـ IP جهازك
 
       final response = await http.post(
         Uri.parse("$BASE_URL/login"),
@@ -49,7 +49,6 @@ class _LoginScreenState extends State<LoginScreen> {
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        // Save token locally
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString("token", data["token"]);
         await prefs.setString("user_name", data["user"]["user_name"]);
@@ -58,11 +57,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomeScreen(
-            userName: data["user"]["user_name"],
-          )),
+          MaterialPageRoute(
+            builder: (context) => HomeScreen(
+              userName: data["user"]["user_name"],
+            ),
+          ),
         );
-
       } else {
         _showMessage(data["message"] ?? "بيانات الدخول غير صحيحة", false);
       }
@@ -93,10 +93,10 @@ class _LoginScreenState extends State<LoginScreen> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 40),
 
+              // Logo Circle
               Container(
                 height: 60,
                 width: 60,
@@ -120,11 +120,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 40),
 
+              // EMAIL
               TextField(
                 controller: emailController,
                 textAlign: TextAlign.right,
                 decoration: InputDecoration(
                   labelText: "البريد الإلكتروني",
+                  labelStyle: TextStyle(color: AppColors.textDark),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -133,14 +135,26 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 15),
 
-              TextField(
-                controller: passwordController,
-                textAlign: TextAlign.right,
-                obscureText: true,
+              // PASSWORD (FIXED)
+              TextFormField(
+                controller: passwordController, // << تم إضافة الـ Controller هنا 👍
+                obscureText: _obscurePassword,
                 decoration: InputDecoration(
                   labelText: "كلمة المرور",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
+                  labelStyle: TextStyle(color: AppColors.textDark),
+                  border: OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                      color: AppColors.primary,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
                   ),
                 ),
               ),
@@ -153,7 +167,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                      MaterialPageRoute(
+                        builder: (context) => const ForgotPasswordScreen(),
+                      ),
                     );
                   },
                   child: Text(
@@ -168,6 +184,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
               const SizedBox(height: 10),
 
+              // BUTTON
               SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -193,17 +210,25 @@ class _LoginScreenState extends State<LoginScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text("ليس لديك حساب؟ ", style: TextStyle(color: AppColors.textDark)),
+                  Text(
+                    "ليس لديك حساب؟ ",
+                    style: TextStyle(color: AppColors.textDark),
+                  ),
                   GestureDetector(
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const SignupScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const SignupScreen(),
+                        ),
                       );
                     },
                     child: Text(
                       "إنشاء حساب",
-                      style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],

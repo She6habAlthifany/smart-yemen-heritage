@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/features/ar/ar_view_screen.dart';
 import 'package:frontend/features/assistant/smart_assistant_screen.dart';
+import '../../../core/services/favorites_manager.dart';
+import '../../ar/ar_view_screen.dart';
 
 class DetailsMaeen extends StatelessWidget {
   const DetailsMaeen({super.key});
+
   void _showSmartAssistantPopup(BuildContext context) {
     showDialog(
       context: context,
@@ -11,8 +13,7 @@ class DetailsMaeen extends StatelessWidget {
       builder: (context) {
         return Dialog(
           backgroundColor: Colors.white,
-          shape:
-          RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           insetPadding: const EdgeInsets.all(20),
           child: SizedBox(
             height: 500,
@@ -22,20 +23,15 @@ class DetailsMaeen extends StatelessWidget {
                 Container(
                   decoration: const BoxDecoration(
                     color: Color(0xFF8B5E3C),
-                    borderRadius:
-                    BorderRadius.vertical(top: Radius.circular(20)),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                   ),
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
                         'المساعد الذكي',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16),
+                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                       IconButton(
                         icon: const Icon(Icons.close, color: Colors.white),
@@ -44,9 +40,7 @@ class DetailsMaeen extends StatelessWidget {
                     ],
                   ),
                 ),
-                const Expanded(
-                  child: SmartAssistantScreen(),
-                ),
+                const Expanded(child: SmartAssistantScreen()),
               ],
             ),
           ),
@@ -54,8 +48,14 @@ class DetailsMaeen extends StatelessWidget {
       },
     );
   }
+
   @override
   Widget build(BuildContext context) {
+    // معرف ثابت + بيانات العرض للمفضلة
+    const placeId = 'maeen';
+    const placeTitle = 'مملكة معين';
+    const placeImage = 'assets/images/maeen.jpg';
+
     return Scaffold(
       backgroundColor: const Color(0xFFFBE9D0),
       body: SingleChildScrollView(
@@ -81,14 +81,30 @@ class DetailsMaeen extends StatelessWidget {
                     ),
                   ),
                 ),
+
+                // زر المفضلة (يستخدم FavoritesManager)
                 Positioned(
                   top: 40,
                   right: 10,
                   child: CircleAvatar(
                     backgroundColor: Colors.black54,
                     child: IconButton(
-                      icon: const Icon(Icons.favorite_border, color: Colors.white),
-                      onPressed: () {},
+                      icon: Icon(
+                        FavoritesManager.instance.isFavorite(placeId)
+                            ? Icons.favorite
+                            : Icons.favorite_border,
+                        color: Colors.red,
+                      ),
+                      onPressed: () {
+                        // عند الضغط نغير الحالة ونمرّر title/image حتى تظهر في صفحة المفضلة
+                        FavoritesManager.instance.toggleFavorite(
+                          placeId,
+                          title: placeTitle,
+                          image: placeImage,
+                        );
+                        // لإجبار إعادة رسم الواجهة ليتغيّر شكل الأيقونة
+                        (context as Element).markNeedsBuild();
+                      },
                     ),
                   ),
                 ),
@@ -132,7 +148,7 @@ class DetailsMaeen extends StatelessWidget {
                       style: TextStyle(color: Colors.brown, fontSize: 14)),
                   const SizedBox(height: 15),
 
-                  // 🔹 صور إضافية
+                  // 🔹 صور إضافية (أسماء الصور كما طلبت لم تتغير)
                   SizedBox(
                     height: 70,
                     child: ListView(
@@ -173,7 +189,7 @@ class DetailsMaeen extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
 
-                  // 🔹 الوصف
+                  // 🔹 الوصف (لم يتغير)
                   const Text(
                     'مملكة معين كانت من أقدم الممالك اليمنية القديمة، وازدهرت بين القرنين الخامس والعاشر قبل الميلاد. '
                         'كانت عاصمتها قرناو (موقعها الحالي الجوف)، وامتازت بتطورها التجاري والإداري، '
@@ -189,6 +205,7 @@ class DetailsMaeen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
+                      // المساعد الذكي
                       Column(
                         children: [
                           IconButton(
@@ -197,27 +214,27 @@ class DetailsMaeen extends StatelessWidget {
                             },
                             icon: const Icon(Icons.record_voice_over, color: Colors.brown, size: 30),
                           ),
-                          const Text('المساعد الذكي',
-                              style: TextStyle(color: Colors.brown, fontSize: 13)),
+                          const Text('المساعد الذكي', style: TextStyle(color: Colors.brown, fontSize: 13)),
                         ],
                       ),
+
+                      // الواقع المعزز
                       Column(
                         children: [
                           IconButton(
                             onPressed: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(
-                                  builder: (context) => const ARViewScreen(),
-                                ),
+                                MaterialPageRoute(builder: (context) => const ARViewScreen()),
                               );
                             },
                             icon: const Icon(Icons.vrpano_outlined, color: Colors.brown, size: 30),
                           ),
-                          const Text('الواقع المعزز',
-                              style: TextStyle(color: Colors.brown, fontSize: 13)),
+                          const Text('الواقع المعزز', style: TextStyle(color: Colors.brown, fontSize: 13)),
                         ],
                       ),
+
+                      // إضافة تعليق
                       Column(
                         children: [
                           IconButton(
@@ -225,8 +242,7 @@ class DetailsMaeen extends StatelessWidget {
                               showModalBottomSheet(
                                 context: context,
                                 shape: const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.vertical(
-                                      top: Radius.circular(20)),
+                                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                                 ),
                                 builder: (context) => Padding(
                                   padding: const EdgeInsets.all(16),
@@ -234,31 +250,18 @@ class DetailsMaeen extends StatelessWidget {
                                     mainAxisSize: MainAxisSize.min,
                                     crossAxisAlignment: CrossAxisAlignment.end,
                                     children: [
-                                      const Text(
-                                        "إضافة تعليق",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
-                                        ),
-                                      ),
+                                      const Text("إضافة تعليق", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                                       const SizedBox(height: 10),
                                       TextField(
                                         textAlign: TextAlign.right,
-                                        decoration: const InputDecoration(
-                                          hintText: "اكتب تعليقك هنا...",
-                                          border: OutlineInputBorder(),
-                                        ),
+                                        decoration: const InputDecoration(hintText: "اكتب تعليقك هنا...", border: OutlineInputBorder()),
                                       ),
                                       const SizedBox(height: 10),
                                       Align(
                                         alignment: Alignment.centerLeft,
                                         child: ElevatedButton(
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.brown,
-                                          ),
-                                          onPressed: () {
-                                            Navigator.pop(context);
-                                          },
+                                          style: ElevatedButton.styleFrom(backgroundColor: Colors.brown),
+                                          onPressed: () => Navigator.pop(context),
                                           child: const Text("إرسال"),
                                         ),
                                       ),
@@ -269,8 +272,7 @@ class DetailsMaeen extends StatelessWidget {
                             },
                             icon: const Icon(Icons.comment, color: Colors.brown, size: 30),
                           ),
-                          const Text('إضافة تعليق',
-                              style: TextStyle(color: Colors.brown, fontSize: 13)),
+                          const Text('إضافة تعليق', style: TextStyle(color: Colors.brown, fontSize: 13)),
                         ],
                       ),
                     ],

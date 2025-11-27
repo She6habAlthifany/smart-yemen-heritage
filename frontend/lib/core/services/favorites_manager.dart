@@ -1,46 +1,43 @@
 // lib/core/services/favorites_manager.dart
-import 'package:flutter/foundation.dart';
-
-class FavoritesManager extends ChangeNotifier {
+class FavoritesManager {
   FavoritesManager._private();
   static final FavoritesManager instance = FavoritesManager._private();
 
-  final Set<String> _favoriteIds = {};
+  // مجموعة المعرفات المحفوظة
+  final Set<String> _ids = {};
 
-  bool isFavorite(String id) => _favoriteIds.contains(id);
+  // خريطة لمعلومات العنصر (title, image) بناءً على id
+  final Map<String, Map<String, String>> _meta = {};
 
-  /// يبدّل حالة العنصر ويعلِن المستمعين
-  void toggle(String id) {
-    if (_favoriteIds.contains(id)) {
-      _favoriteIds.remove(id);
+  bool isFavorite(String id) => _ids.contains(id);
+
+  /// toggleFavorite: يحفظ أو يزيل من المفضلة
+  /// تمرّر id و optional title/image حتى تظهر في صفحة المفضلة لاحقاً
+  void toggleFavorite(String id, {required String title, required String image}) {
+    if (_ids.contains(id)) {
+      _ids.remove(id);
+      _meta.remove(id);
     } else {
-      _favoriteIds.add(id);
-    }
-    notifyListeners();
-  }
-
-  /// إضافة مباشرة (إن احتجت)
-  void add(String id) {
-    if (!_favoriteIds.contains(id)) {
-      _favoriteIds.add(id);
-      notifyListeners();
+      _ids.add(id);
+      _meta[id] = {'title': title, 'image': image};
     }
   }
 
-  /// إزالة مباشرة (إن احتجت)
-  void remove(String id) {
-    if (_favoriteIds.contains(id)) {
-      _favoriteIds.remove(id);
-      notifyListeners();
-    }
+  /// للحصول على قائمة المفضلات (كل عنصر: id, title, image)
+  List<Map<String, String>> getFavorites() {
+    return _ids.map((id) {
+      final m = _meta[id];
+      return {
+        'id': id,
+        'title': m != null ? (m['title'] ?? '') : '',
+        'image': m != null ? (m['image'] ?? '') : '',
+      };
+    }).toList();
   }
 
-  /// كل المعرفات المفضلة
-  List<String> get all => List.unmodifiable(_favoriteIds);
-
-  /// مسح الكل
-  void clear() {
-    _favoriteIds.clear();
-    notifyListeners();
+  /// مسح كل المفضلات (اختياري)
+  void clearAll() {
+    _ids.clear();
+    _meta.clear();
   }
 }
