@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
-
-// استدعاء صفحات التفاصيل
-import '../../features/schedule/details/details_screen.dart';
-import '../../features/schedule/details/details_bab_yemen.dart';
-import '../schedule2/details/details_maeen.dart';
-import '../schedule2/details/details_saba.dart';
+import '../schedule/details/details_bab_yemen.dart';
+import '../schedule/schedule_screen.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -15,93 +11,119 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  final TextEditingController _controller = TextEditingController();
-  String _query = '';
+  final TextEditingController searchController = TextEditingController();
 
-  final List<Map<String, dynamic>> allPlaces = [
+  // قائمة المعالم والممالك
+  final List<Map<String, dynamic>> allItems = [
     {
-      'id': 'dar_alhajar',
-      'name': 'دار الحجر',
-      'image': 'assets/images/dar_alhajar.jpg',
-      'category': 'آثار',
-      'screen': const DetailsScreen(placeId: null, title: null, image: null, description: null, images: [],),
+      "title": "باب اليمن",
+      "image": "assets/images/bab_yemen.jpg",
+      "page": const DetailsBabYemen(),
     },
     {
-      'id': 'bab_yemen',
-      'name': 'باب اليمن',
-      'image': 'assets/images/bab_yemen.jpg',
-      'category': 'آثار',
-      'screen': const DetailsBabYemen(),
+      "title": "دار الحجر",
+      "image": "assets/images/dar_alhajar.jpg",
+      "page": const ScheduleScreen(), // غيّرها حسب ملفك
     },
     {
-      'id': 'saba',
-      'name': 'مملكة سبأ',
-      'image': 'assets/images/saba.jpg',
-      'category': 'ممالك',
-      'screen': const DetailsSaba(),
+      "title": "مملكة معين",
+      "image": "assets/images/maeen.jpg",
+      "page": null, // ضع صفحتها لاحقاً
     },
-    {
-      'id': 'maeen',
-      'name': 'مملكة معين',
-      'image': 'assets/images/maeen.jpg',
-      'category': 'ممالك',
-      'screen': const DetailsMaeen(),
-    }
   ];
 
-  List<Map<String, dynamic>> get results {
-    if (_query.trim().isEmpty) return allPlaces;
-    final q = _query.trim().toLowerCase();
-    return allPlaces.where((p) {
-      return p['name'].toLowerCase().contains(q) ||
-          p['category'].toLowerCase().contains(q) ||
-          p['id'].toLowerCase().contains(q);
-    }).toList();
+  List<Map<String, dynamic>> searchResults = [];
+
+  void search(String text) {
+    setState(() {
+      searchResults = allItems
+          .where((item) =>
+      item["title"].toString().contains(text.trim()) ||
+          item["title"]
+              .toString()
+              .startsWith(text.trim()))
+          .toList();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        title: TextField(
-          controller: _controller,
-          autofocus: true,
-          textAlign: TextAlign.right,
-          style: const TextStyle(color: Colors.white),
-          decoration: const InputDecoration(
-            border: InputBorder.none,
-            hintText: 'ابحث...',
-            hintStyle: TextStyle(color: Colors.white70),
+    return DraggableScrollableSheet(
+      initialChildSize: 0.85,
+      maxChildSize: 0.95,
+      minChildSize: 0.40,
+      builder: (_, controller) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: AppColors.background,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
           ),
-          onChanged: (v) => setState(() => _query = v),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(12),
-        itemCount: results.length,
-        itemBuilder: (context, i) {
-          final p = results[i];
-          return Card(
-            child: ListTile(
-              leading: Image.asset(p['image'], width: 60, fit: BoxFit.cover),
-              title: Text(p['name'], textAlign: TextAlign.right),
-              subtitle: Text(p['category'], textAlign: TextAlign.right),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => p['screen']),
-                );
-              },
-            ),
-          );
-        },
-      ),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              // مربع البحث
+              TextField(
+                controller: searchController,
+                textAlign: TextAlign.right,
+                onChanged: search,
+                decoration: InputDecoration(
+                  hintText: "ابحث عن معلم أو مملكة",
+                  prefixIcon: const Icon(Icons.search),
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // قائمة النتائج
+              Expanded(
+                child: searchResults.isEmpty
+                    ? const Center(
+                  child: Text("لا توجد نتائج", style: TextStyle(fontSize: 18)),
+                )
+                    : ListView.builder(
+                  controller: controller,
+                  itemCount: searchResults.length,
+                  itemBuilder: (context, index) {
+                    final item = searchResults[index];
+                    return ListTile(
+                      contentPadding: const EdgeInsets.all(8),
+                      trailing: Text(
+                        item["title"],
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.asset(
+                          item["image"],
+                          width: 60,
+                          height: 60,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      onTap: () {
+                        Navigator.pop(context); // إغلاق نافذة البحث
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => item["page"],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
