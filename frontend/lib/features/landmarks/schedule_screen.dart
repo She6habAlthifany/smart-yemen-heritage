@@ -9,14 +9,14 @@ const Color _primaryColor = Color(0xFFCD853F); // لون ترابي دافئ (Pe
 const Color _backgroundColor = Colors.white; // اللون الأبيض للخلفية
 const Color _cardColor = Colors.white; // لون البطاقة (أبيض)
 
-class ScheduleScreen extends StatefulWidget {
-  const ScheduleScreen({super.key});
+class LandmarksScreen extends StatefulWidget {
+  const LandmarksScreen({super.key});
 
   @override
-  State<ScheduleScreen> createState() => _ScheduleScreenState();
+  State<LandmarksScreen> createState() => _LandmarksScreenState();
 }
 
-class _ScheduleScreenState extends State<ScheduleScreen> {
+class _LandmarksScreenState extends State<LandmarksScreen> {
   late Future<List<Content>> _contentsFuture;
 
   // 🔹 صور افتراضية من assets

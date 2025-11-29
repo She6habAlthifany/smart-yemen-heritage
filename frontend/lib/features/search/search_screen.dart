@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 
 // استدعاء صفحات التفاصيل
-import '../../features/schedule/details/details_screen.dart';
-import '../../features/schedule/details/details_bab_yemen.dart';
-import '../schedule2/details/details_maeen.dart';
-import '../schedule2/details/details_saba.dart';
+import '../../features/Landmarks/details/details_screen.dart';
+import '../../features/Landmarks/details/details_bab_yemen.dart';
+import '../Kingdoms/details/details_maeen.dart';
+import '../Kingdoms/details/details_saba.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:frontend/features/assistant/smart_assistant_screen.dart';
-import 'package:frontend/features/schedule2/schedule2_screen.dart';
+import 'package:frontend/features/Kingdoms/schedule2_screen.dart';
+import 'package:frontend/features/landmarks/schedule_screen.dart';
 import '../../core/constants/app_colors.dart';
-import '../schedule/details/details_bab_yemen.dart';
-import '../schedule/schedule_screen.dart';
+import '../Landmarks/details/details_bab_yemen.dart';
+// import '../landmarks/schedule_screen.dart';
+// import '../Kingdoms/schedule2_screen.dart';
 import '../search/search_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -58,12 +60,12 @@ class _HomeScreenState extends State<HomeScreen> {
     if (categories[index] == "معالم") {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const ScheduleScreen()),
+        MaterialPageRoute(builder: (context) => const LandmarksScreen()),
       );
     } else if (categories[index] == "ممالك") {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const Schedule2Screen()),
+        MaterialPageRoute(builder: (context) => const KingdomsScreen  ()),
       );
     }
   }
@@ -241,7 +243,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     } else {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const ScheduleScreen()),
+                        MaterialPageRoute(builder: (context) => const LandmarksScreen()),
                       );
                     }
                   },

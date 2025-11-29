@@ -11,135 +11,98 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
+    with TickerProviderStateMixin {
+  late AnimationController _fadeController;
+  late AnimationController _scaleController;
 
-  bool _isInitializing = true;
-  String _initializationStatus = 'Initializing...';
+  late Animation<double> _fadeAnimation;
+  late Animation<double> _scaleAnimation;
+
+  String _status = "جارٍ التحميل...";
+  bool _showStatus = true;
 
   @override
   void initState() {
     super.initState();
-    _setupAnimations();
+
+    _fadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+
+    _scaleController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+      lowerBound: 0.7,
+      upperBound: 1.0,
+    );
+
+    _fadeAnimation = CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeInOut,
+    );
+
+    _scaleAnimation = CurvedAnimation(
+      parent: _scaleController,
+      curve: Curves.easeOutBack,
+    );
+
+    _fadeController.forward();
+    _scaleController.forward();
+
     _initializeApp();
   }
 
-  void _setupAnimations() {
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 5000),
-    );
-
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeIn,
-      ),
-    );
-
-    _animationController.forward();
-  }
-
   Future<void> _initializeApp() async {
-    try {
-      setState(() => _initializationStatus = 'Checking authentication...');
-      await Future.delayed(const Duration(milliseconds: 500));
+    await Future.delayed(const Duration(milliseconds: 500));
 
-      final isAuthenticated = await _checkAuthenticationStatus();
+    _updateStatus("جاري التحقق من الإعدادات...");
+    await Future.delayed(const Duration(milliseconds: 600));
 
-      setState(() => _initializationStatus = 'Loading preferences...');
-      await Future.delayed(const Duration(milliseconds: 500));
+    _updateStatus("جاري تحميل البيانات...");
+    await Future.delayed(const Duration(milliseconds: 600));
 
-      await _loadLanguagePreferences();
+    _updateStatus("تهيئة النظام...");
+    await Future.delayed(const Duration(milliseconds: 600));
 
-      setState(() => _initializationStatus = 'Loading heritage content...');
-      await Future.delayed(const Duration(milliseconds: 500));
+    _updateStatus("جاري التحضير...");
+    await Future.delayed(const Duration(milliseconds: 600));
 
-      await _fetchCachedContent();
-
-      setState(() => _initializationStatus = 'Preparing AR features...');
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      await _prepareARCapabilities();
-
-      await _animationController.forward();
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      if (!mounted) return;
-      _navigateToNextScreen(isAuthenticated);
-    } catch (e) {
-      if (!mounted) return;
-      _showRetryDialog();
-    }
-  }
-
-  Future<bool> _checkAuthenticationStatus() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    return false;
-  }
-
-  Future<void> _loadLanguagePreferences() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-  }
-
-  Future<void> _fetchCachedContent() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-  }
-
-  Future<void> _prepareARCapabilities() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-  }
-
-  void _navigateToNextScreen(bool isAuthenticated) async {
     final prefs = await SharedPreferences.getInstance();
     final onboardingSeen = prefs.getBool("onboarding_seen") ?? false;
 
+    if (!mounted) return;
+
     if (!onboardingSeen) {
       Navigator.pushReplacementNamed(context, '/onboarding');
-    } else if (!isAuthenticated) {
-      Navigator.pushReplacementNamed(context, '/login');
     } else {
-      Navigator.pushReplacementNamed(context, '/home');
+      Navigator.pushReplacementNamed(context, '/login');
     }
   }
 
-  void _showRetryDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('Connection Error'),
-        content: const Text(
-          'Unable to initialize the application. Please check your connection and try again.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              setState(() => _isInitializing = true);
-              _initializeApp();
-            },
-            child: const Text('Retry'),
-          ),
-        ],
-      ),
-    );
+  void _updateStatus(String s) {
+    setState(() {
+      _showStatus = false;
+    });
+
+    Future.delayed(const Duration(milliseconds: 200), () {
+      if (!mounted) return;
+      setState(() {
+        _status = s;
+        _showStatus = true;
+      });
+    });
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
+    _fadeController.dispose();
+    _scaleController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -148,92 +111,120 @@ class _SplashScreenState extends State<SplashScreen>
     );
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
 
-      body: SafeArea(
-        child: SizedBox(
-          width: size.width,
-          height: size.height,
+        // خلفية حديثة بتدرج لوني
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppColors.background,
+              AppColors.background.withOpacity(0.95),
+            ],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
 
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Spacer(flex: 2),
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Spacer(),
 
-                // الشعار
-                Container(
-                  width: 120,
-                  height: 120,
+              // الشعار بحركة Scale لطيفة
+              ScaleTransition(
+                scale: _scaleAnimation,
+                child: Container(
+                  width: 140,
+                  height: 140,
                   decoration: BoxDecoration(
                     color: AppColors.background,
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: AppColors.primary,
-                      width: 2,
+                      width: 3,
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.2),
+                        blurRadius: 20,
+                        spreadRadius: 5,
+                      ),
+                    ],
                   ),
-                  child: Center(
-                    child: Icon(
-                      Icons.account_balance,
-                      size: 64,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-
-                Text(
-                  '𐩬𐩣𐩺𐩡𐩱 𐩻𐩧𐩩',
-                  style: TextStyle(
-                    fontFamily: 'OldSouthArabian',
-                    color: AppColors.primary,
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-
-
-                const SizedBox(height: 8),
-
-                Text(
-                  'الموسوعة الذكية في تاريخ اليمن القديم',
-                  style: TextStyle(
-                    color: AppColors.textDark,
-                    fontSize: 16,
-                  ),
-                ),
-
-                const Spacer(flex: 2),
-
-                const SizedBox(
-                  width: 32,
-                  height: 32,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 3,
+                  child: Icon(
+                    Icons.account_balance,
+                    size: 70,
                     color: AppColors.primary,
                   ),
                 ),
+              ),
 
-                const SizedBox(height: 16),
+              const SizedBox(height: 24),
 
-                AnimatedOpacity(
-                  opacity: _isInitializing ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 300),
-                  child: Text(
-                    _initializationStatus,
-                    style: TextStyle(
-                      color: AppColors.textDark,
-                      fontSize: 14,
-                    ),
-                  ),
+              // نص المسند
+              Text(
+                '𐩬𐩣𐩺𐩡𐩱 𐩻𐩧𐩩',
+                style: TextStyle(
+                  fontFamily: 'OldSouthArabian',
+                  color: AppColors.primary,
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold,
                 ),
+              ),
 
-                const SizedBox(height: 48),
-              ],
-            ),
+              const SizedBox(height: 10),
+
+              // عنوان أسفل الشعار
+              Text(
+                'الموسوعة الذكية في تاريخ اليمن القديم',
+                style: TextStyle(
+                  color: AppColors.textDark,
+                  fontSize: 16,
+                ),
+              ),
+
+              const Spacer(),
+
+              const CircularProgressIndicator(
+                color: AppColors.primary,
+                strokeWidth: 3,
+              ),
+
+              const SizedBox(height: 16),
+
+              // نص متغيّر بتأثير AnimatedSwitcher
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 400),
+                transitionBuilder: (child, anim) {
+                  return FadeTransition(
+                    opacity: anim,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0, 0.3),
+                        end: Offset.zero,
+                      ).animate(anim),
+                      child: child,
+                    ),
+                  );
+                },
+                child: _showStatus
+                    ? Text(
+                  _status,
+                  key: ValueKey(_status),
+                  style: TextStyle(
+                    color: AppColors.textDark.withOpacity(0.8),
+                    fontSize: 14,
+                  ),
+                )
+                    : const SizedBox(),
+              ),
+
+              const SizedBox(height: 40),
+            ],
           ),
         ),
       ),
