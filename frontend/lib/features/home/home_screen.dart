@@ -4,7 +4,6 @@ import 'package:frontend/features/schedule2/schedule2_screen.dart';
 import '../../core/constants/app_colors.dart';
 import '../schedule/details/details_bab_yemen.dart';
 import '../schedule/schedule_screen.dart';
-import '../search/search_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final String userName;
@@ -94,31 +93,20 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             // مربع البحث
-            GestureDetector(
-              onTap: () {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.transparent,
-                  builder: (_) => const SearchScreen(),
-                );
-              },
-              child: AbsorbPointer(
-                child: TextField(
-                  decoration: InputDecoration(
-                    hintText: "ابحث عن المعالم الأثرية والتاريخية",
-                    prefixIcon: const Icon(Icons.search),
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
+            TextField(
+              textAlign: TextAlign.right,
+              decoration: InputDecoration(
+                hintText: "ابحث عن المعالم الأثرية والتاريخية",
+                prefixIcon: const Icon(Icons.search),
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 15),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
                 ),
               ),
             ),
-
 
             const SizedBox(height: 15),
 

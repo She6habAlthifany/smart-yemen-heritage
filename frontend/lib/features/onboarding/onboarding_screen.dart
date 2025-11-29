@@ -10,27 +10,55 @@ class OnboardingScreen extends StatefulWidget {
   State<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingScreenState extends State<OnboardingScreen>
+    with SingleTickerProviderStateMixin {
   final PageController _controller = PageController();
+  late AnimationController _anim;
+  late Animation<double> _fade;
+
   int _index = 0;
 
   final List<Map<String, String>> pages = [
     {
-      "image": "assets/images/on1.jpg",
+      "image": "assets/images/Onboarding1.webp",
       "title": "اكتشف تاريخ اليمن",
       "desc": "تعرف على الحضارات اليمنية القديمة بطريقة تفاعلية."
     },
     {
-      "image": "assets/images/on2.jpg",
+      "image": "assets/images/Onboarding2.webp",
       "title": "واقع معزز",
       "desc": "اعرض المجسمات التاريخية وكأنها أمامك."
     },
     {
-      "image": "assets/images/on3.jpg",
+      "image": "assets/images/Onboarding3.webp",
       "title": "موسوعة ذكية",
       "desc": "مساعد ذكي يقدم لك المعلومات التاريخية."
     },
   ];
+
+  @override
+  void initState() {
+    super.initState();
+
+    _anim = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+
+    _fade = CurvedAnimation(
+      parent: _anim,
+      curve: Curves.easeInOut,
+    );
+
+    _anim.forward();
+  }
+
+  @override
+  void dispose() {
+    _anim.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
 
   Future<void> finishOnboarding() async {
     final prefs = await SharedPreferences.getInstance();
@@ -38,7 +66,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      MaterialPageRoute(builder: (_) => const LoginPage()),
     );
   }
 
@@ -67,38 +95,56 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 controller: _controller,
                 itemCount: pages.length,
                 onPageChanged: (i) {
-                  setState(() => _index = i);
+                  setState(() {
+                    _index = i;
+                    _anim.forward(from: 0);
+                  });
                 },
                 itemBuilder: (_, i) {
-                  return Column(
-                    children: [
-                      Image.asset(pages[i]["image"]!, height: 280),
-                      const SizedBox(height: 20),
-                      Text(
-                        pages[i]["title"]!,
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textDark,
+                  return FadeTransition(
+                    opacity: _fade,
+                    child: Column(
+                      children: [
+                        Image.asset(
+                          pages[i]["image"]!,
+                          height: 280,
+                          fit: BoxFit.cover,
                         ),
-                      ),
-                      const SizedBox(height: 10),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                        child: Text(
-                          pages[i]["desc"]!,
-                          textAlign: TextAlign.center,
+                        const SizedBox(height: 20),
+
+                        // العنوان
+                        Text(
+                          pages[i]["title"]!,
                           style: TextStyle(
-                            fontSize: 18,
-                            color: AppColors.textDark.withOpacity(0.7),
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.textDark,
                           ),
                         ),
-                      ),
-                    ],
+
+                        const SizedBox(height: 12),
+
+                        // الوصف
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Text(
+                            pages[i]["desc"]!,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 18,
+                              height: 1.6,
+                              color: AppColors.textDark.withOpacity(0.7),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   );
                 },
               ),
             ),
+
+            const SizedBox(height: 10),
 
             // النقاط
             Row(
@@ -108,7 +154,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     (i) => AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   margin: const EdgeInsets.symmetric(horizontal: 5),
-                  width: _index == i ? 20 : 8,
+                  width: _index == i ? 22 : 8,
                   height: 8,
                   decoration: BoxDecoration(
                     color: AppColors.primary,
@@ -126,7 +172,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
-                  minimumSize: const Size(double.infinity, 50),
+                  minimumSize: const Size(double.infinity, 55),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
                 onPressed: () {
                   if (_index == pages.length - 1) {
@@ -139,9 +188,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   }
                 },
                 child: Text(
-                  _index == pages.length - 1
-                      ? "ابدأ الآن"
-                      : "التالي",
+                  _index == pages.length - 1 ? "ابدأ الآن" : "التالي",
                   style: const TextStyle(fontSize: 18, color: Colors.white),
                 ),
               ),
