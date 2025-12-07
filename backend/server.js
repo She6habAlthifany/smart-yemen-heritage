@@ -3,6 +3,7 @@ const dotenv = require('dotenv');
 const morgan = require('morgan');
 const cors = require('cors');
 const connectDB = require('./config/db');
+const aiRoutes = require("./ai/aiRoutes");
 
 dotenv.config();
 const app = express();
@@ -30,8 +31,7 @@ app.use('/api/banner', require('./routes/bannerRoutes'));
 app.use('/api/feedback', require('./routes/feedbackRoutes'));
 app.use('/api/contenttypes', require('./routes/contentTypeRoutes'));
 app.use('/api/notification', require('./routes/notificationRoutes'));
-
-
+app.use("/api/ai", aiRoutes);
 
 //  استدعاء swagger
 const { swaggerUi, swaggerSpec } = require('./swagger');
