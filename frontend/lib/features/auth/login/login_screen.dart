@@ -1,10 +1,11 @@
-import 'dart:convert';
+// lib/features/auth/login/login_page.dart
+
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/constants/app_colors.dart';
+import '../../../services/auth_service.dart'; // 💡 الاستخدام الصحيح للخدمة
 import '../../home/home_screen.dart';
 import '../signup/signup_screen.dart';
 import '../forgot_password/forgot_password_screen.dart';
@@ -33,10 +34,11 @@ class _LoginPageState extends State<LoginPage> {
   void initState() {
     super.initState();
     _loadSavedLogin();
+    // 🧹 يمكنك تفعيل هذا السطر مؤقتاً مرة واحدة للمسح الشامل:
+    // AuthService.clearAllPrefs();
   }
 
-  // ... (دوال _loadSavedLogin و _saveLoginData و loginUser كما هي)
-
+  // دالة تحميل بيانات "تذكرني"
   Future<void> _loadSavedLogin() async {
     final prefs = await SharedPreferences.getInstance();
     final savedEmail = prefs.getString("saved_email");
@@ -52,6 +54,7 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  // دالة حفظ بيانات "تذكرني"
   Future<void> _saveLoginData() async {
     final prefs = await SharedPreferences.getInstance();
     if (rememberMe) {
@@ -65,6 +68,9 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  // ===============================================
+  // 🚀 دالة تسجيل الدخول المُعدَّلة لاستخدام AuthService
+  // ===============================================
   Future<void> loginUser() async {
     if (!_formKey.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
@@ -75,43 +81,34 @@ class _LoginPageState extends State<LoginPage> {
     final password = passwordController.text.trim();
 
     try {
-      const String BASE_URL = "http://10.0.2.2:5000/api/users";
+      // 💡 الخطوة الحاسمة: استخدام دالة login المصححة في AuthService
+      final result = await AuthService().login(email, password);
 
-      final response = await http
-          .post(
-        Uri.parse("$BASE_URL/login"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({
-          "user_email": email,
-          "user_password": password,
-        }),
-      )
-          .timeout(const Duration(seconds: 7));
-
-      final data = jsonDecode(response.body);
-
-      if (response.statusCode == 200) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString("token", data["token"]);
-        await prefs.setString("user_name", data["user"]["user_name"]);
+      if (result['success'] == true) {
+        // حفظ بيانات "تذكرني" فقط، دون حفظ التوكن (الذي تم حفظه بالفعل داخل AuthService)
         await _saveLoginData();
+
+        // 💡 جلب اسم المستخدم من الرد للترحيب به
+        final userName = result['data']['user']['user_name'] as String;
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("تم تسجيل الدخول بنجاح 🎉")),
         );
 
-        Navigator.pushReplacement(
+        // 💡 يجب الانتظار لضمان أن كل العمليات غير المتزامنة قد تمت
+        await Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => HomeScreen(
-              userName: data["user"]["user_name"],
+              userName: userName,
             ),
           ),
         );
       } else {
+        // في حالة فشل التسجيل (Status != 200 أو missing token/userId)
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(data["message"] ?? "بيانات الدخول غير صحيحة"),
+            content: Text(result["message"] ?? "فشل تسجيل الدخول. تحقق من بياناتك."),
             backgroundColor: Colors.red,
           ),
         );
@@ -124,9 +121,10 @@ class _LoginPageState extends State<LoginPage> {
         ),
       );
     } catch (e) {
+      print('Login Error: $e'); // طباعة الخطأ في الـ Console
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("خطأ في الاتصال بالسيرفر"),
+          content: Text("خطأ غير متوقع في الاتصال بالسيرفر"),
           backgroundColor: Colors.red,
         ),
       );
@@ -142,7 +140,6 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // التعديل 1: جعل الخلفية بيضاء نقية
       backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
@@ -152,8 +149,7 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(
               children: [
                 const SizedBox(height: 40),
-
-                // Logo Circle (بلون AppColors.primary)
+                // Logo Circle
                 Container(
                   height: 70,
                   width: 70,
@@ -192,7 +188,6 @@ class _LoginPageState extends State<LoginPage> {
                   decoration: InputDecoration(
                     labelText: "البريد الإلكتروني",
                     prefixIcon: Icon(Icons.email, color: AppColors.primary),
-                    // التعديل 2: جعل خلفية الحقل بيج فاتح
                     filled: true,
                     fillColor: _fieldsBackgroundColor,
                     border: OutlineInputBorder(
@@ -226,7 +221,6 @@ class _LoginPageState extends State<LoginPage> {
                   decoration: InputDecoration(
                     labelText: "كلمة المرور",
                     prefixIcon: Icon(Icons.lock, color: AppColors.primary),
-                    // التعديل 2: جعل خلفية الحقل بيج فاتح
                     filled: true,
                     fillColor: _fieldsBackgroundColor,
                     suffixIcon: IconButton(
