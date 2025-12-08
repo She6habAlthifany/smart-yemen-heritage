@@ -3,6 +3,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:frontend/features/assistant/smart_assistant_screen.dart';
 import 'package:frontend/features/Kingdoms/schedule2_screen.dart';
 import 'package:frontend/features/landmarks/schedule_screen.dart';
+// **الاستيراد الضروري للصفحة الجديدة**
+import '../../screens/ancient_yemen_home_page.dart';
 import '../../core/constants/app_colors.dart';
 import '../Antiquities/AntiquitiesScreen.dart';
 import '../search/search_screen.dart';
@@ -136,6 +138,25 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           Row(
             children: [
+              // **الزر الجديد: أيقونة استدعاء AncientYemenHomePage**
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.menu_book, color: Color(0xFFD4A017)), // أيقونة الكتاب/الموسوعة
+                  onPressed: () {
+                    // الاستدعاء المباشر للانتقال إلى الصفحة الجديدة
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const AncientYemenHomePage()),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: 4),
+              // زر البحث
               Container(
                 decoration: BoxDecoration(
                   color: Colors.grey[200],
@@ -154,6 +175,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(width: 4),
+              // زر اللغة
               Container(
                 decoration: BoxDecoration(
                   color: Colors.grey[200],
