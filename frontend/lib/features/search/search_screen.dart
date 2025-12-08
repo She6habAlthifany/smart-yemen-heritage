@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
 
-// استدعاء صفحات التفاصيل
-import '../../features/Landmarks/details/details_screen.dart';
-import '../../features/Landmarks/details/details_bab_yemen.dart';
-import '../Kingdoms/details/details_maeen.dart';
-import '../Kingdoms/details/details_saba.dart';
+import '../../features/landmarks/details/details_screen.dart';
+//import '../../features/landmarks/details/details_bab_yemen.dart';
+//import '../Kingdoms/details/details_maeen.dart';
+import '../landmarks/schedule_screen.dart';
+
+const Color _primaryColor = Color(0xFFCD853F);
+const Color _backgroundColor = Colors.white;
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -15,93 +17,126 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  final TextEditingController _controller = TextEditingController();
-  String _query = '';
+  final TextEditingController searchController = TextEditingController();
 
-  final List<Map<String, dynamic>> allPlaces = [
+  final List<Map<String, dynamic>> allItems = [
     {
-      'id': 'dar_alhajar',
-      'name': 'دار الحجر',
-      'image': 'assets/images/dar_alhajar.jpg',
-      'category': 'آثار',
-      'screen': const DetailsScreen(placeId: null, title: null, image: null, description: null, images: [],),
+      "title": "باب اليمن",
+      "image": "assets/images/bab_yemen.jpg",
+     // "page": const DetailsBabYemen(),
     },
     {
-      'id': 'bab_yemen',
-      'name': 'باب اليمن',
-      'image': 'assets/images/bab_yemen.jpg',
-      'category': 'آثار',
-      'screen': const DetailsBabYemen(),
+      "title": "دار الحجر",
+      "image": "assets/images/dar_alhajar.jpg",
+      "page": const LandmarksScreen(),
     },
     {
-      'id': 'saba',
-      'name': 'مملكة سبأ',
-      'image': 'assets/images/saba.jpg',
-      'category': 'ممالك',
-      'screen': const DetailsSaba(),
+      "title": "مملكة معين",
+      "image": "assets/images/maeen.jpg",
+      "page": null,
     },
-    {
-      'id': 'maeen',
-      'name': 'مملكة معين',
-      'image': 'assets/images/maeen.jpg',
-      'category': 'ممالك',
-      'screen': const DetailsMaeen(),
-    }
   ];
 
-  List<Map<String, dynamic>> get results {
-    if (_query.trim().isEmpty) return allPlaces;
-    final q = _query.trim().toLowerCase();
-    return allPlaces.where((p) {
-      return p['name'].toLowerCase().contains(q) ||
-          p['category'].toLowerCase().contains(q) ||
-          p['id'].toLowerCase().contains(q);
-    }).toList();
+  List<Map<String, dynamic>> searchResults = [];
+
+  void search(String text) {
+    setState(() {
+      searchResults = allItems
+          .where((item) => item["title"].toString().contains(text.trim()) || item["title"].toString().startsWith(text.trim()))
+          .toList();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        title: TextField(
-          controller: _controller,
-          autofocus: true,
-          textAlign: TextAlign.right,
-          style: const TextStyle(color: Colors.white),
-          decoration: const InputDecoration(
-            border: InputBorder.none,
-            hintText: 'ابحث...',
-            hintStyle: TextStyle(color: Colors.white70),
+    return DraggableScrollableSheet(
+      initialChildSize: 0.85,
+      maxChildSize: 0.95,
+      minChildSize: 0.40,
+      builder: (_, controller) {
+        return Container(
+          decoration: BoxDecoration(
+            color: _backgroundColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
+            boxShadow: [
+              BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 10, offset: const Offset(0, -3)),
+            ],
           ),
-          onChanged: (v) => setState(() => _query = v),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(12),
-        itemCount: results.length,
-        itemBuilder: (context, i) {
-          final p = results[i];
-          return Card(
-            child: ListTile(
-              leading: Image.asset(p['image'], width: 60, fit: BoxFit.cover),
-              title: Text(p['name'], textAlign: TextAlign.right),
-              subtitle: Text(p['category'], textAlign: TextAlign.right),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => p['screen']),
-                );
-              },
-            ),
-          );
-        },
-      ),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              TextField(
+                controller: searchController,
+                textAlign: TextAlign.right,
+                onChanged: search,
+                decoration: InputDecoration(
+                  hintText: "ابحث عن معلم أو مملكة",
+                  hintStyle: TextStyle(color: Colors.grey.shade600),
+                  prefixIcon: const Icon(Icons.search, color: _primaryColor),
+                  filled: true,
+                  fillColor: Colors.grey.shade100,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              Expanded(
+                child: searchResults.isEmpty
+                    ? Center(
+                  child: Text(
+                    "لا توجد نتائج",
+                    style: TextStyle(fontSize: 18, color: Colors.grey.shade600, fontWeight: FontWeight.w500),
+                  ),
+                )
+                    : ListView.builder(
+                  controller: controller,
+                  itemCount: searchResults.length,
+                  itemBuilder: (context, index) {
+                    final item = searchResults[index];
+                    return Card(
+                      elevation: 3,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide(color: _primaryColor.withOpacity(0.3)),
+                      ),
+                      margin: const EdgeInsets.symmetric(vertical: 8),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.all(12),
+                        trailing: Text(
+                          item["title"],
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: _primaryColor),
+                        ),
+                        leading: ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.asset(
+                            item["image"],
+                            width: 60,
+                            height: 60,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.pop(context);
+                          if (item["page"] != null) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => item["page"]),
+                            );
+                          }
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
