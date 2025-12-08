@@ -25,4 +25,6 @@ class ContentDetails {
       imageUrl: json['image_url'],
     );
   }
+
+  get address => null;
 }

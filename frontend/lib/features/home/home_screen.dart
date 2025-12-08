@@ -4,10 +4,11 @@ import 'package:frontend/features/assistant/smart_assistant_screen.dart';
 import 'package:frontend/features/Kingdoms/schedule2_screen.dart';
 import 'package:frontend/features/landmarks/schedule_screen.dart';
 import '../../core/constants/app_colors.dart';
-import '../Landmarks/details/details_bab_yemen.dart';
-// import '../landmarks/schedule_screen.dart';
-// import '../Kingdoms/schedule2_screen.dart';
+import '../Antiquities/AntiquitiesScreen.dart';
 import '../search/search_screen.dart';
+import '../../models/content_model.dart';
+import '../../services/content_service.dart';
+import '../Landmarks/details/content_details_screen.dart'; // صفحة التفاصيل الجديدة
 
 class HomeScreen extends StatefulWidget {
   final String userName;
@@ -24,12 +25,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<String> categories = ["الكل", "آثار", "ممالك", "معالم"];
 
+  // هذه القائمة تستخدم فقط للعرض، لا تعتمد عليها لبيانات التفاصيل
   List<Map<String, String>> allPlaces = [
     {"title": "باب اليمن", "location": "صنعاء القديمة", "image": "assets/images/bab_yemen1.jpg"},
     {"title": "دار الحجر", "location": "وادي ظهر", "image": "assets/images/place2.jpg"},
-    {"title": "مدينة شبام حضرموت", "location": "حضرموت", "image": "assets/images/place1.jpg"},
-    {"title": "معبد اوام(عرش بلقيس)", "location": "م", "image": "assets/images/place2.jpg"},
+    {"title": "شبام حضرموت", "location": "حضرموت", "image": "assets/images/place1.jpg"}, // تم تعديل العنوان
+    {"title": "جبل صبر", "location": "محافظة تعز", "image": "assets/images/place2.jpg"}, // تم تعديل العنوان
   ];
+
 
   List<Map<String, String>> filteredPlaces = [];
   final List<String> sliderImages = [
@@ -40,7 +43,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   int _currentPage = 0;
   static const Color _cardColor = Color(0xFFFBF8F0);
-  final Color _logoColor = AppColors.primary;
 
   @override
   void initState() {
@@ -49,7 +51,28 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onNavItemTapped(int index) {
-    setState(() => _selectedNavIndex = index);
+    if (index == 0) {
+      setState(() => _selectedNavIndex = 0);
+      return;
+    }
+
+    if (index == 1) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const SmartAssistantScreen()),
+      );
+      return;
+    }
+
+    if (index == 2) {
+      Navigator.pushNamed(context, '/favorites');
+      return;
+    }
+
+    if (index == 3) {
+      Navigator.pushNamed(context, '/profile');
+      return;
+    }
   }
 
   void _onCategorySelected(int index) {
@@ -57,15 +80,22 @@ class _HomeScreenState extends State<HomeScreen> {
       _selectedCategoryIndex = index;
     });
 
-    if (categories[index] == "معالم") {
+    final categoryName = categories[index];
+
+    if (categoryName == "معالم") {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const LandmarksScreen()),
       );
-    } else if (categories[index] == "ممالك") {
+    } else if (categoryName == "ممالك") {
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const KingdomsScreen  ()),
+        MaterialPageRoute(builder: (context) => const KingdomsScreen()),
+      );
+    } else if (categoryName == "آثار") {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const AntiquitiesScreen()),
       );
     }
   }
@@ -74,15 +104,14 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        // ===== وضع النصوص في أقصى اليسار =====
         title: Align(
-          alignment: Alignment.centerLeft, // محاذاة لليسار
+          alignment: Alignment.centerLeft,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center, // محاذاة النصوص لليسار
-            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
                 '𐩱𐩡𐩣𐩬',
@@ -104,11 +133,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-
-        // ===== أيقونات البحث واللغة على اليمين =====
         actions: [
           Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
               Container(
                 decoration: BoxDecoration(
@@ -118,12 +144,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: IconButton(
                   icon: const Icon(Icons.search, color: Colors.black),
                   onPressed: () {
-                    // ===== هنا تطبيق ربط صفحة البحث باستخدام showModalBottomSheet =====
                     showModalBottomSheet(
                       context: context,
                       isScrollControlled: true,
                       backgroundColor: Colors.transparent,
-                      builder: (_) => const SearchScreen(), // استخدام SearchScreen
+                      builder: (_) => const SearchScreen(),
                     );
                   },
                 ),
@@ -144,23 +169,24 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(width: 8),
         ],
       ),
+
       body: IndexedStack(
         index: _selectedNavIndex,
         children: [
           _buildHomePageContent(),
-          const SmartAssistantScreen(),
-          Center(child: Text("المفضلة", style: TextStyle(color: AppColors.textDark))),
-          Center(child: Text("الملف الشخصي", style: TextStyle(color: AppColors.textDark))),
+          const Center(child: Text("المساعد الذكي")),
+          const Center(child: Text("المفضلة")),
+          const Center(child: Text("الملف الشخصي")),
         ],
       ),
 
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.white,
         selectedItemColor: AppColors.primary,
-        unselectedItemColor: AppColors.textDark.withOpacity(0.6),
-        type: BottomNavigationBarType.fixed,
         currentIndex: _selectedNavIndex,
         onTap: _onNavItemTapped,
+        type: BottomNavigationBarType.fixed,
+        unselectedItemColor: AppColors.textDark.withOpacity(0.6),
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "الرئيسية"),
           BottomNavigationBarItem(icon: Icon(Icons.mic), label: "المساعد الذكي"),
@@ -171,10 +197,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ==================================================
-  // ================ محتوى الصفحة ===================
-  // ==================================================
-
   Widget _buildHomePageContent() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -184,7 +206,6 @@ class _HomeScreenState extends State<HomeScreen> {
           _imageSlider(),
           const SizedBox(height: 20),
 
-          // ====== قائمة الأقسام ======
           SizedBox(
             height: 40,
             child: ListView.separated(
@@ -219,7 +240,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
           const SizedBox(height: 15),
 
-          // ====== عناصر الأماكن ======
           SizedBox(
             height: (filteredPlaces.length / 2).ceil() * 260.0,
             child: GridView.builder(
@@ -234,16 +254,23 @@ class _HomeScreenState extends State<HomeScreen> {
               itemBuilder: (context, index) {
                 final place = filteredPlaces[index];
                 return GestureDetector(
-                  onTap: () {
-                    if (place['title'] == "باب اليمن") {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const DetailsBabYemen()),
+                  onTap: () async {
+                    try {
+                      List<Content> allContents = await ContentService.fetchContents();
+                      Content? selectedContent = allContents.firstWhere(
+                            (content) => content.title == place['title'],
+                        orElse: () => throw Exception("المحتوى غير موجود"),
                       );
-                    } else {
+
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const LandmarksScreen()),
+                        MaterialPageRoute(
+                          builder: (_) => ContentDetailsScreen(contentId: selectedContent.id),
+                        ),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("حدث خطأ أثناء جلب المحتوى: $e")),
                       );
                     }
                   },
@@ -261,10 +288,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ==================================================
-  // ================ السلايدر ========================
-  // ==================================================
-
+  // بقية وظائف السلايدر والكارد تبقى كما هي
   Widget _imageSlider() {
     return Column(
       children: [
@@ -273,9 +297,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: PageView.builder(
             itemCount: sliderImages.length,
             onPageChanged: (index) {
-              setState(() {
-                _currentPage = index;
-              });
+              setState(() => _currentPage = index);
             },
             itemBuilder: (context, index) {
               return _sliderImageCard(
@@ -321,46 +343,6 @@ class _HomeScreenState extends State<HomeScreen> {
               height: 250,
               width: double.infinity,
               fit: BoxFit.cover,
-            ),
-          ),
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.black.withOpacity(0.0),
-                    Colors.black.withOpacity(0.5),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 15,
-            right: 15,
-            child: Row(
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding: const EdgeInsets.all(8),
-                  child: const Icon(Icons.account_balance_sharp, color: Colors.black, size: 20),
-                ),
-                const SizedBox(width: 10),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding: const EdgeInsets.all(8),
-                  child: const Icon(Icons.location_on_sharp, color: Colors.black, size: 20),
-                ),
-              ],
             ),
           ),
         ],
@@ -417,22 +399,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 4),
                 Text(location,
                     style: TextStyle(color: AppColors.textDark.withOpacity(0.6), fontSize: 12)),
-                const SizedBox(height: 6),
-                Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                  child: Text(
-                    "عرض بالواقع المعزز",
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
               ],
             ),
           ),

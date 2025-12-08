@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/features/home/home_screen.dart'; // تأكد أن المسار صحيح
-import 'package:frontend/features/Kingdoms/details/details_maeen.dart';
-import 'package:frontend/features/Kingdoms/details/details_saba.dart';
-import 'package:frontend/features/Kingdoms/details/details_sayoon.dart';
+// 💡 استيراد الموديل والخدمة من مساراتهما المشتركة
+import '../../models/content_model.dart';
+import '../../services/content_service.dart';
+// 💡 استيراد شاشة التفاصيل العامة التي تتوقع contentId بدلاً من الشاشات المحددة
+import '../landmarks/details/content_details_screen.dart';
 
-// تعريف الألوان الحديثة المستخدمة
-const Color _primaryColor = Color(0xFFCD853F); // لون ترابي دافئ
-const Color _backgroundColor = Colors.white; // اللون الأبيض النظيف للخلفية
-const Color _lightGrey = Color(0xFFF0F0F0); // لون رمادي فاتح للخلفية
+// نفس الألوان المستخدمة في صفحة المعالم
+const Color _primaryColor = Color(0xFFCD853F);
+const Color _backgroundColor = Colors.white;
 
 class KingdomsScreen extends StatefulWidget {
   const KingdomsScreen({super.key});
@@ -17,169 +17,124 @@ class KingdomsScreen extends StatefulWidget {
 }
 
 class _KingdomsScreenState extends State<KingdomsScreen> {
-  int _selectedIndex = 1; // لأننا في صفحة الممالك (البحث)
 
-  final List<Map<String, dynamic>> kingdoms = [
-    {
-      'name': 'مملكة سبأ',
-      'location': 'محافظة مأرب شرق صنعاء',
-      'image': 'assets/images/saba.jpg',
-      'page': const DetailsSaba(),
-    },
-    {
-      'name': 'مملكة معين',
-      'location': 'وادي الجوف شمال اليمن',
-      'image': 'assets/images/maeen.jpg',
-      'page': const DetailsMaeen(),
-    },
-    {
-      'name': 'قصر سيئون',
-      'location': 'وادي حضرموت شرق اليمن',
-      'image': 'assets/images/sayoon.jpg',
-      'page': const DetailsSayoon(),
-    },
+  // 1. تعريف Future لجلب قائمة المحتويات (الممالك)
+  late Future<List<Content>> _contentsFuture;
+
+  // 2. صور افتراضية (لحل مشكلة عدم وجود رابط صورة من API)
+  final List<String> defaultImages = [
+    "assets/images/saba.jpg",
+    "assets/images/maeen.jpg",
+    "assets/images/sayoon.jpg",
   ];
 
-  void _onItemTapped(int index) {
-    setState(() => _selectedIndex = index);
-    if (index == 0) {
-      // يجب تغيير هذا ليناسب هيكل التنقل الفعلي لتطبيقك
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const HomeScreen(userName: '')),
+  @override
+  void initState() {
+    super.initState();
+    // 3. 🎯 جلب المحتوى الخاص بالممالك فقط
+    _contentsFuture = ContentService.fetchContents(type: 'Kingdoms');
+  }
+
+  // 4. دالة عرض الصورة (مماثلة لـ LandmarksScreen)
+  Widget buildImage(String? imageUrl, int index) {
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      return Image.network(
+        imageUrl,
+        width: 80,
+        height: 80,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Image.asset(
+            defaultImages[index % defaultImages.length],
+            width: 80,
+            height: 80,
+            fit: BoxFit.cover,
+          );
+        },
       );
     }
+
+    return Image.asset(
+      defaultImages[index % defaultImages.length],
+      width: 80,
+      height: 80,
+      fit: BoxFit.cover,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _lightGrey, // خلفية رمادية فاتحة
+      backgroundColor: Colors.grey.shade50,
 
-      // شريط التطبيق العلوي
       appBar: AppBar(
-        automaticallyImplyLeading: false, // نستخدم أيقونة مخصصة للرجوع
-        backgroundColor: _backgroundColor,
-        elevation: 1, // ظل خفيف للفصل بين الشريط والقائمة
+        automaticallyImplyLeading: false,
+        backgroundColor: _primaryColor,
+        elevation: 4,
         title: const Text(
           "الممالك القديمة",
           style: TextStyle(
-            color: _primaryColor,
+            color: Colors.white,
             fontWeight: FontWeight.bold,
           ),
         ),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.notifications_none, color: _primaryColor),
-          ),
-        ],
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.arrow_back_ios, color: _primaryColor),
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
         ),
       ),
 
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 🔹 قسم "الممالك" و "عرض الكل"
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "الممالك",
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.black87, // نص أسود ثقيل
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () { /* وظيفة عرض الكل */ },
-                    child: const Text(
-                      "عرض الكل",
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: _primaryColor, // نص بلون الهوية
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+      // 5. استخدام FutureBuilder لعرض البيانات من الـ API
+      body: FutureBuilder<List<Content>>(
+        future: _contentsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator(color: _primaryColor));
+          } else if (snapshot.hasError) {
+            return Center(child: Text("حدث خطأ: ${snapshot.error}"));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text("لا توجد ممالك متاحة"));
+          }
 
-            // 🔹 قائمة الممالك
-            Expanded(
-              child: ListView.builder(
-                itemCount: kingdoms.length,
-                itemBuilder: (context, index) {
-                  final item = kingdoms[index];
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => item['page']),
-                      );
-                    },
-                    child: _buildKingdomCard(item),
+          final contents = snapshot.data!;
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: contents.length,
+            itemBuilder: (context, index) {
+              final item = contents[index];
+              return GestureDetector(
+                onTap: () {
+                  // 6. الانتقال إلى شاشة التفاصيل العامة باستخدام contentId
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => ContentDetailsScreen(contentId: item.id)),
                   );
                 },
-              ),
-            ),
-          ],
-        ),
-      ),
-
-      // 🔹 شريط التنقل السفلي بتصميم عصري
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: _backgroundColor,
-        currentIndex: _selectedIndex,
-        selectedItemColor: _primaryColor, // أيقونة مختارة باللون الترابي
-        unselectedItemColor: Colors.grey.shade400, // أيقونة غير مختارة بلون رمادي فاتح
-        type: BottomNavigationBarType.fixed, // تثبيت الأيقونات
-        elevation: 8,
-        onTap: _onItemTapped,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
-            label: 'الرئيسية',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search_outlined),
-            activeIcon: Icon(Icons.search),
-            label: 'استكشف', // تم تغيير التسمية لتكون أكثر وضوحاً
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'ملفي',
-          ),
-        ],
+                child: _buildKingdomCard(item, index), // تمرير item و index
+              );
+            },
+          );
+        },
       ),
     );
   }
 
-  // دالة بناء بطاقة المملكة بشكل أنيق
-  Widget _buildKingdomCard(Map<String, dynamic> item) {
+  // 👑 تصميم البطاقة معدّل ليقبل موديل Content
+  Widget _buildKingdomCard(Content item, int index) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: _backgroundColor, // لون البطاقة أبيض
+        color: _backgroundColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _primaryColor.withOpacity(0.2), width: 1), // حدود بلون ترابي خفيف
+        border: Border.all(color: _primaryColor.withOpacity(0.5), width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08), // ظل ألطف
+            color: Colors.black.withOpacity(0.15),
             spreadRadius: 0,
             blurRadius: 10,
-            offset: const Offset(0, 4),
+            offset: const Offset(0, 5),
           ),
         ],
       ),
@@ -187,56 +142,50 @@ class _KingdomsScreenState extends State<KingdomsScreen> {
         padding: const EdgeInsets.all(12),
         child: Row(
           children: [
-            // صورة المعلم
             ClipRRect(
-              borderRadius: BorderRadius.circular(12), // زوايا دائرية للصورة
-              child: Image.asset(
-                item['image'],
-                width: 85,
-                height: 85,
-                fit: BoxFit.cover,
-              ),
+              borderRadius: BorderRadius.circular(10),
+              // 7. استخدام دالة عرض الصورة الجديدة
+              child: buildImage(item.imageUrl, index),
             ),
-            const SizedBox(width: 15),
+            const SizedBox(width: 12),
 
-            // تفاصيل المملكة
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    item['name'],
+                    item.title, // استخدام title
                     style: const TextStyle(
-                      color: Colors.black87, // نص أسود داكن
+                      color: _primaryColor,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      const Icon(Icons.location_on,
-                          color: Colors.grey, size: 16),
-                      const SizedBox(width: 6),
-                      Flexible(
-                        child: Text(
-                          item['location'],
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 14,
+                  const SizedBox(height: 6),
+                  if (item.address != null) // استخدام address
+                    Row(
+                      children: [
+                        const Icon(Icons.location_on,
+                            color: Colors.grey, size: 16),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            item.address!,
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 13,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
                 ],
               ),
             ),
 
-            // أيقونة التوجيه
             const Icon(Icons.arrow_forward_ios,
-                color: _primaryColor, size: 18), // أيقونة بلون الهوية
+                color: _primaryColor, size: 16),
           ],
         ),
       ),
