@@ -16,13 +16,8 @@ const Color _backgroundColor = Colors.white; // لون الخلفية الأبي
 
 class ContentDetailsScreen extends StatefulWidget {
   final String contentId;
-  final String? address;
 
-  const ContentDetailsScreen({
-    super.key,
-    required this.contentId,
-    this.address,
-  });
+  const ContentDetailsScreen({super.key, required this.contentId});
 
   @override
   State<ContentDetailsScreen> createState() => _ContentDetailsScreenState();
@@ -609,7 +604,6 @@ class _ContentDetailsScreenState extends State<ContentDetailsScreen> {
   }
 
   Widget _buildAboutSection(String description) {
-    var item;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -618,12 +612,8 @@ class _ContentDetailsScreenState extends State<ContentDetailsScreen> {
             Icon(Icons.info_outline, color: _primaryColor, size: 24),
             SizedBox(width: 8),
             Text('عن المعلم', style: TextStyle(fontSize: 20, color: _primaryColor, fontWeight: FontWeight.bold)),
-
           ],
-
         ),
-        _buildLocationRow(widget.address ?? item.address),
-
         const Divider(color: _primaryColor, thickness: 0.5),
         const SizedBox(height: 10),
         Text(
