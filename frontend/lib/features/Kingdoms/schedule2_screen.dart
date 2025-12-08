@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
-// 💡 استيراد الموديل والخدمة من مساراتهما المشتركة
 import '../../models/content_model.dart';
 import '../../services/content_service.dart';
-// 💡 استيراد شاشة التفاصيل العامة التي تتوقع contentId بدلاً من الشاشات المحددة
 import '../landmarks/details/content_details_screen.dart';
 
-// نفس الألوان المستخدمة في صفحة المعالم
 const Color _primaryColor = Color(0xFFCD853F);
 const Color _backgroundColor = Colors.white;
 
@@ -17,11 +14,8 @@ class KingdomsScreen extends StatefulWidget {
 }
 
 class _KingdomsScreenState extends State<KingdomsScreen> {
-
-  // 1. تعريف Future لجلب قائمة المحتويات (الممالك)
   late Future<List<Content>> _contentsFuture;
 
-  // 2. صور افتراضية (لحل مشكلة عدم وجود رابط صورة من API)
   final List<String> defaultImages = [
     "assets/images/saba.jpg",
     "assets/images/maeen.jpg",
@@ -31,11 +25,10 @@ class _KingdomsScreenState extends State<KingdomsScreen> {
   @override
   void initState() {
     super.initState();
-    // 3. 🎯 جلب المحتوى الخاص بالممالك فقط
+    // 🎯 جلب الممالك فقط
     _contentsFuture = ContentService.fetchContents(type: 'Kingdoms');
   }
 
-  // 4. دالة عرض الصورة (مماثلة لـ LandmarksScreen)
   Widget buildImage(String? imageUrl, int index) {
     if (imageUrl != null && imageUrl.isNotEmpty) {
       return Image.network(
@@ -66,7 +59,6 @@ class _KingdomsScreenState extends State<KingdomsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
-
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: _primaryColor,
@@ -83,13 +75,13 @@ class _KingdomsScreenState extends State<KingdomsScreen> {
           icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
         ),
       ),
-
-      // 5. استخدام FutureBuilder لعرض البيانات من الـ API
       body: FutureBuilder<List<Content>>(
         future: _contentsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: _primaryColor));
+            return const Center(
+              child: CircularProgressIndicator(color: _primaryColor),
+            );
           } else if (snapshot.hasError) {
             return Center(child: Text("حدث خطأ: ${snapshot.error}"));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
@@ -105,14 +97,15 @@ class _KingdomsScreenState extends State<KingdomsScreen> {
               final item = contents[index];
               return GestureDetector(
                 onTap: () {
-                  // 6. الانتقال إلى شاشة التفاصيل العامة باستخدام contentId
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (_) => ContentDetailsScreen(contentId: item.id)),
+                      builder: (_) =>
+                          ContentDetailsScreen(contentId: item.id),
+                    ),
                   );
                 },
-                child: _buildKingdomCard(item, index), // تمرير item و index
+                child: _buildKingdomCard(item, index),
               );
             },
           );
@@ -121,14 +114,16 @@ class _KingdomsScreenState extends State<KingdomsScreen> {
     );
   }
 
-  // 👑 تصميم البطاقة معدّل ليقبل موديل Content
   Widget _buildKingdomCard(Content item, int index) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: _backgroundColor,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _primaryColor.withOpacity(0.5), width: 1),
+        border: Border.all(
+          color: _primaryColor.withOpacity(0.5),
+          width: 1,
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.15),
@@ -144,17 +139,15 @@ class _KingdomsScreenState extends State<KingdomsScreen> {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              // 7. استخدام دالة عرض الصورة الجديدة
               child: buildImage(item.imageUrl, index),
             ),
             const SizedBox(width: 12),
-
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    item.title, // استخدام title
+                    item.title,
                     style: const TextStyle(
                       color: _primaryColor,
                       fontSize: 18,
@@ -162,7 +155,7 @@ class _KingdomsScreenState extends State<KingdomsScreen> {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  if (item.address != null) // استخدام address
+                  if (item.address != null)
                     Row(
                       children: [
                         const Icon(Icons.location_on,
@@ -183,9 +176,11 @@ class _KingdomsScreenState extends State<KingdomsScreen> {
                 ],
               ),
             ),
-
-            const Icon(Icons.arrow_forward_ios,
-                color: _primaryColor, size: 16),
+            const Icon(
+              Icons.arrow_forward_ios,
+              color: _primaryColor,
+              size: 16,
+            ),
           ],
         ),
       ),

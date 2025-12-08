@@ -1,17 +1,12 @@
 import 'package:flutter/material.dart';
-// استيراد الخدمات والموديلات الأساسية
 import '../../../models/content_details_model.dart';
 import '../../../services/content_details_service.dart';
-// استيراد الخدمات الجديدة (Favorites & Feedback/Auth)
-import '../../../core/services/favorites_manager.dart';
-import '../../../services/feedback_service.dart';
-import '../../../services/auth_service.dart'; // 💡 استيراد AuthService
-// استيراد الشاشات الأخرى
 import '../../ar/ar_view_screen.dart';
 import '../../assistant/smart_assistant_screen.dart';
 
 // تعريف الألوان المستخدمة لضمان التناسق
-const Color _primaryColor = Color(0xFFD4A017); // اللون الذهبي/الكهرماني
+// تم تغيير الألوان لتناسب تصميم الواجهة الرئيسية (الذهبي/الأبيض)
+const Color _primaryColor = Color(0xFFD4A017); // اللون الذهبي/الكهرماني (AppColors.primary)
 const Color _backgroundColor = Colors.white; // لون الخلفية الأبيض
 
 class ContentDetailsScreen extends StatefulWidget {
@@ -26,10 +21,9 @@ class ContentDetailsScreen extends StatefulWidget {
 class _ContentDetailsScreenState extends State<ContentDetailsScreen> {
   late Future<List<ContentDetails>> _detailsFuture;
   bool _isBookmarked = false;
-  // تم إزالة _currentImageIndex لأنه غير مستخدم في هذا الكود
+  int _currentImageIndex = 0;
 
-  ContentDetails? _currentItemDetails;
-
+  // صور افتراضية في حال لم يوجد صور
   final List<String> defaultImages = [
     'assets/images/dar_alhajar1.jpg',
     'assets/images/dar_alhajar2.jpg',
@@ -39,53 +33,13 @@ class _ContentDetailsScreenState extends State<ContentDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    _checkToken();
-    _isBookmarked = FavoritesManager.instance.isFavorite(widget.contentId);
     _detailsFuture = ContentDetailsService.fetchContentDetails(widget.contentId);
   }
 
-  // 💡 دالة مساعدة لتصحيح رابط الصورة
-  String _resolveImageUrl(String url) {
-    // 💡 مسار الخادم الأساسي (يجب أن يكون نفس المسار الذي تستخدمه للمنادات الأخرى)
-    const String baseUrl = "http://10.0.2.2:5000";
-
-    // إذا كان الرابط يبدأ بـ /uploads (مسار نسبي)، أضف الـ Base URL
-    if (url.startsWith('/uploads')) {
-      return baseUrl + url;
-    }
-    // إذا كان رابط شبكة كامل (http/https) أو ملف asset محلي
-    return url;
-  }
-
-  // 💡 تشخيص: دالة مؤقتة لفحص التوكن
-  void _checkToken() async {
-    final token = await AuthService.getAuthToken();
-    final userId = await AuthService.getUserId();
-
-    if (token != null) {
-      print('✅ CheckToken: التوكن موجود، يبدأ بـ: ${token.substring(0, 10)}');
-    } else {
-      print('❌ CheckToken: التوكن NULL.');
-    }
-  }
-
-  // ===========================================
-  // ============= وظائف المفضلة (Favorites) =============
-  // ===========================================
-
   void _toggleBookmark() {
-    if (_currentItemDetails == null) return;
-
-    FavoritesManager.instance.toggleFavorite(
-      widget.contentId,
-      title: _currentItemDetails!.title,
-      image: _currentItemDetails!.imageUrl ?? defaultImages[0],
-    );
-
     setState(() {
-      _isBookmarked = FavoritesManager.instance.isFavorite(widget.contentId);
+      _isBookmarked = !_isBookmarked;
     });
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(_isBookmarked ? 'تم الحفظ في المفضلة' : 'تم إزالة الحفظ من المفضلة'),
@@ -95,139 +49,6 @@ class _ContentDetailsScreenState extends State<ContentDetailsScreen> {
     );
   }
 
-  // ===========================================
-  // ============= وظائف التقييمات (Feedback) المُعدَّلة =============
-  // ===========================================
-
-  void _showRatingDialog(BuildContext context) {
-    int? selectedRating;
-    final commentController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('تقييم وإضافة ملاحظة', textAlign: TextAlign.right),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // 1. تحديد النجوم (التقييم)
-                StatefulBuilder(
-                  builder: (BuildContext context, StateSetter setState) {
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(5, (index) {
-                        return IconButton(
-                          icon: Icon(
-                            index < (selectedRating ?? 0)
-                                ? Icons.star
-                                : Icons.star_border,
-                            color: _primaryColor,
-                            size: 30,
-                          ),
-                          onPressed: () {
-                            setState(() {
-                              selectedRating = index + 1;
-                            });
-                          },
-                        );
-                      }),
-                    );
-                  },
-                ),
-                const SizedBox(height: 15),
-                // 2. حقل التعليق
-                TextField(
-                  controller: commentController,
-                  textAlign: TextAlign.right,
-                  decoration: InputDecoration(
-                    labelText: 'ملاحظاتك (اختياري)',
-                    border: const OutlineInputBorder(),
-                    labelStyle: TextStyle(color: Colors.grey.shade600),
-                    focusedBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: _primaryColor),
-                    ),
-                  ),
-                  maxLines: 3,
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('إلغاء', style: TextStyle(color: Colors.grey)),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (selectedRating == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('الرجاء اختيار تقييم (نجمة واحدة على الأقل).')),
-                  );
-                  return;
-                }
-                Navigator.pop(context); // إغلاق مربع الحوار
-                _submitFeedback(selectedRating!, commentController.text);
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: _primaryColor),
-              child: const Text('إرسال', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _submitFeedback(int rating, String comment) async {
-    final String contentId = widget.contentId;
-
-    try {
-      // 1. 💡 جلب معرف المستخدم الحقيقي والتوكن للتحقق
-      final String? userId = await AuthService.getUserId();
-      final String? authToken = await AuthService.getAuthToken();
-
-      if (authToken == null || userId == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('الرجاء تسجيل الدخول أولاً لإضافة تقييم.'),
-            backgroundColor: Colors.blueGrey,
-          ),
-        );
-        return;
-      }
-
-      // 2. إرسال البيانات عبر الخدمة باستخدام الـ userId الحقيقي
-      await FeedbackService.createFeedback(
-        userId, // استخدام الـ userId الذي تم جلبه
-        contentId,
-        rating,
-        comment.isEmpty ? null : comment,
-      );
-
-      // 3. إظهار رسالة نجاح
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('تم إرسال تقييمك بنجاح!'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
-      // 4. إظهار رسالة خطأ
-      String errorMessage = e.toString().contains("Authentication required")
-          ? "يجب تسجيل الدخول لإضافة تقييم."
-          : e.toString().replaceAll('Exception: ', '');
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('فشل إرسال التقييم: $errorMessage'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  // ... (بقية دوال المساعد والواقع المعزز) ...
   void _navigateToAR() {
     Navigator.push(
       context,
@@ -250,7 +71,7 @@ class _ContentDetailsScreenState extends State<ContentDetailsScreen> {
               children: [
                 Container(
                   decoration: const BoxDecoration(
-                    color: _primaryColor,
+                    color: _primaryColor, // اللون الأساسي الجديد
                     borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -279,10 +100,6 @@ class _ContentDetailsScreenState extends State<ContentDetailsScreen> {
     );
   }
 
-  // ===========================================
-  // ============= WIDGET BUILDERS =============
-  // ===========================================
-
   @override
   Widget build(BuildContext context) {
     final double screenHeight = MediaQuery.of(context).size.height;
@@ -301,9 +118,6 @@ class _ContentDetailsScreenState extends State<ContentDetailsScreen> {
           }
 
           final item = snapshot.data!.first;
-          _currentItemDetails = item;
-
-          // 💡 يتم تمرير قائمة الصور (أو الرابط الوحيد) للعرض
           final List<String> images = (item.imageUrl != null && item.imageUrl!.isNotEmpty)
               ? [item.imageUrl!]
               : defaultImages;
@@ -331,9 +145,9 @@ class _ContentDetailsScreenState extends State<ContentDetailsScreen> {
                         icon: _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
                         onPressed: _toggleBookmark,
                         iconColor: _isBookmarked ? _primaryColor : Colors.white,
-                        backgroundColor: _isBookmarked ? Colors.white : Colors.black45,
+                        backgroundColor: _isBookmarked ? Colors.white : Colors.black45, // تغيير بسيط للحفظ
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                     ],
                     flexibleSpace: FlexibleSpaceBar(
                       background: _buildImageGallery(images, screenHeight),
@@ -346,6 +160,7 @@ class _ContentDetailsScreenState extends State<ContentDetailsScreen> {
                       decoration: const BoxDecoration(
                           color: _backgroundColor,
                           borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                          // إضافة ظل خفيف عند التمرير
                           boxShadow: [
                             BoxShadow(
                                 color: Colors.black12,
@@ -359,17 +174,14 @@ class _ContentDetailsScreenState extends State<ContentDetailsScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _buildHeaderSection(item.title, item.imageUrl ?? defaultImages[0]),
-                          const SizedBox(height: 8),
-
-                          // ====== هنا عرض الموقع بنفس شكل صفحة المعالم (أيقونة + نص) ======
-                          if (item.address != null && item.address!.isNotEmpty)
-                            _buildLocationRow(item.address),
                           const SizedBox(height: 15),
 
                           _buildSmallImageGallery(images),
                           const SizedBox(height: 30),
+
                           _buildAboutSection(item.description),
                           const SizedBox(height: 30),
+
                           _buildInteractionButtons(),
                           const SizedBox(height: 20),
                         ],
@@ -447,11 +259,15 @@ class _ContentDetailsScreenState extends State<ContentDetailsScreen> {
     );
   }
 
+  // ===========================================
+  // ============= WIDGET BUILDERS =============
+  // ===========================================
+
   Widget _buildCircleIconButton({
     required IconData icon,
     required VoidCallback onPressed,
     Color iconColor = Colors.white,
-    Color backgroundColor = Colors.black45,
+    Color backgroundColor = Colors.black45, // لون خلفية الأزرار العلوية
   }) {
     return Container(
       margin: const EdgeInsets.only(top: 8, left: 4),
@@ -467,15 +283,10 @@ class _ContentDetailsScreenState extends State<ContentDetailsScreen> {
     );
   }
 
-  // 🖼️ دالة بناء معرض الصور (مع تصحيح الرابط)
+  // ... (باقي دوال بناء ال Widgets كما هي، مع تطبيق _primaryColor)
   Widget _buildImageGallery(List<String> images, double screenHeight) {
-    // 💡 تصحيح الرابط أولاً
-    final String imagePath = _resolveImageUrl(images[0]);
-    final bool isNetworkImage = imagePath.startsWith('http');
-
-    return isNetworkImage
-        ? Image.network(
-      imagePath,
+    return Image.network(
+      images[0],
       width: double.infinity,
       height: screenHeight * 0.55,
       fit: BoxFit.cover,
@@ -491,46 +302,26 @@ class _ContentDetailsScreenState extends State<ContentDetailsScreen> {
           height: screenHeight * 0.55,
         );
       },
-    )
-        : Image.asset(
-      imagePath,
-      fit: BoxFit.cover,
-      width: double.infinity,
-      height: screenHeight * 0.55,
     );
   }
 
-  // 👤 دالة بناء قسم الرأس (مع تصحيح الرابط)
   Widget _buildHeaderSection(String title, String imageUrl) {
-    // 💡 تصحيح الرابط أولاً
-    final String imagePath = _resolveImageUrl(imageUrl);
-    final bool isNetworkImage = imagePath.startsWith('http');
-
-    Widget imageWidget = isNetworkImage
-        ? Image.network(
-      imagePath,
-      width: 56,
-      height: 56,
-      fit: BoxFit.cover,
-      errorBuilder: (context, error, stackTrace) => Image.asset(
-        defaultImages[0],
-        fit: BoxFit.cover,
-      ),
-    )
-        : Image.asset(
-      imagePath,
-      width: 56,
-      height: 56,
-      fit: BoxFit.cover,
-    );
-
     return Row(
       children: [
         CircleAvatar(
           backgroundColor: Colors.white,
           radius: 28,
           child: ClipOval(
-            child: imageWidget,
+            child: Image.network(
+              imageUrl,
+              width: 56,
+              height: 56,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Image.asset(
+                defaultImages[0],
+                fit: BoxFit.cover,
+              ),
+            ),
           ),
         ),
         const SizedBox(width: 15),
@@ -544,27 +335,6 @@ class _ContentDetailsScreenState extends State<ContentDetailsScreen> {
     );
   }
 
-  // ------------------- هنا أضفنا دالة عرض الموقع -------------------
-  // عرض الموقع بنفس شكل صفحة المعالم (أيقونة + نص، بدون تفاعل)
-  Widget _buildLocationRow(String? address) {
-    if (address == null || address.isEmpty) return const SizedBox.shrink();
-
-    return Row(
-      children: [
-        const Icon(Icons.location_on, color: Colors.grey, size: 16),
-        const SizedBox(width: 4),
-        Flexible(
-          child: Text(
-            address,
-            style: const TextStyle(color: Colors.grey, fontSize: 13),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
-    );
-  }
-
-  // 🖼️ دالة بناء معرض الصور الصغير (مع تصحيح الرابط)
   Widget _buildSmallImageGallery(List<String> images) {
     return SizedBox(
       height: 70,
@@ -572,30 +342,25 @@ class _ContentDetailsScreenState extends State<ContentDetailsScreen> {
         scrollDirection: Axis.horizontal,
         itemCount: images.length,
         itemBuilder: (context, index) {
-          // 💡 تطبيق التصحيح هنا
-          final String imagePath = _resolveImageUrl(images[index]);
-          final isAsset = imagePath.startsWith('assets');
-
-          Widget imageWidget = isAsset
-              ? Image.asset(imagePath, width: 70, height: 70, fit: BoxFit.cover)
-              : Image.network(
-            imagePath,
-            width: 70,
-            height: 70,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) => Image.asset(
-              defaultImages[index % defaultImages.length],
-              width: 70,
-              height: 70,
-              fit: BoxFit.cover,
-            ),
-          );
-
+          final isAsset = images[index].startsWith('assets');
           return Padding(
             padding: const EdgeInsets.only(right: 8),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: imageWidget,
+              child: isAsset
+                  ? Image.asset(images[index], width: 70, height: 70, fit: BoxFit.cover)
+                  : Image.network(
+                images[index],
+                width: 70,
+                height: 70,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Image.asset(
+                  defaultImages[index % defaultImages.length],
+                  width: 70,
+                  height: 70,
+                  fit: BoxFit.cover,
+                ),
+              ),
             ),
           );
         },
@@ -632,14 +397,12 @@ class _ContentDetailsScreenState extends State<ContentDetailsScreen> {
         _buildIconWithText(
           icon: Icons.comment_outlined,
           text: 'التعليقات (0)',
-          onPressed: () {
-            // تنفيذ جلب وعرض التعليقات هنا
-          },
+          onPressed: () {},
         ),
         _buildIconWithText(
           icon: Icons.star_border,
           text: 'أضف تقييمك',
-          onPressed: () => _showRatingDialog(context), // ربط دالة التقييم
+          onPressed: () {},
         ),
       ],
     );
