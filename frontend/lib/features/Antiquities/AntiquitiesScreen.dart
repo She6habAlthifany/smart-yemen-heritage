@@ -30,7 +30,7 @@ class _AntiquitiesScreenState extends State<AntiquitiesScreen> {
   void initState() {
     super.initState();
     // 🎯 الخطوة الأهم: جلب المحتوى الخاص بالآثار فقط
-    _contentsFuture = ContentService.fetchContents(type: 'ِِِِAntiquities(اثار)');
+    _contentsFuture = ContentService.fetchContents(type: 'ِِAntiquities(اثار)');
   }
 
   // دالة عرض الصورة (مطابقة للممالك والمعالم)
