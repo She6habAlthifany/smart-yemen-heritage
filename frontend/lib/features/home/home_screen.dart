@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:frontend/features/assistant/smart_assistant_screen.dart';
 import 'package:frontend/features/Kingdoms/schedule2_screen.dart';
 import 'package:frontend/features/landmarks/schedule_screen.dart';
@@ -8,7 +7,7 @@ import '../Antiquities/AntiquitiesScreen.dart';
 import '../search/search_screen.dart';
 import '../../models/content_model.dart';
 import '../../services/content_service.dart';
-import '../Landmarks/details/content_details_screen.dart'; // صفحة التفاصيل الجديدة
+import '../Landmarks/details/content_details_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final String userName;
@@ -23,16 +22,16 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedNavIndex = 0;
   int _selectedCategoryIndex = 0;
 
+  final Color primary = const Color(0xFFD4A017); // العقيق اليمني
+
   final List<String> categories = ["الكل", "آثار", "ممالك", "معالم"];
 
-  // هذه القائمة تستخدم فقط للعرض، لا تعتمد عليها لبيانات التفاصيل
   List<Map<String, String>> allPlaces = [
     {"title": "باب اليمن", "location": "صنعاء القديمة", "image": "assets/images/bab_yemen1.jpg"},
     {"title": "دار الحجر", "location": "وادي ظهر", "image": "assets/images/place2.jpg"},
-    {"title": "شبام حضرموت", "location": "حضرموت", "image": "assets/images/place1.jpg"}, // تم تعديل العنوان
-    {"title": "جبل صبر", "location": "محافظة تعز", "image": "assets/images/place2.jpg"}, // تم تعديل العنوان
+    {"title": "شبام حضرموت", "location": "حضرموت", "image": "assets/images/place1.jpg"},
+    {"title": "جبل صبر", "location": "محافظة تعز", "image": "assets/images/place2.jpg"},
   ];
-
 
   List<Map<String, String>> filteredPlaces = [];
   final List<String> sliderImages = [
@@ -42,7 +41,6 @@ class _HomeScreenState extends State<HomeScreen> {
   ];
 
   int _currentPage = 0;
-  static const Color _cardColor = Color(0xFFFBF8F0);
 
   @override
   void initState() {
@@ -50,121 +48,97 @@ class _HomeScreenState extends State<HomeScreen> {
     filteredPlaces = List.from(allPlaces);
   }
 
+  //-------------- Drawer navigation ----------------
+  void _openDrawer() => Scaffold.of(context).openDrawer();
+
+  Widget _buildDrawerItem({required IconData icon, required String label, required VoidCallback onTap}) {
+    return ListTile(
+      leading: Icon(icon, color: primary),
+      title: Text(label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+      onTap: onTap,
+    );
+  }
+
+  //-------------- Bottom Navigation ----------------
   void _onNavItemTapped(int index) {
     if (index == 0) {
       setState(() => _selectedNavIndex = 0);
       return;
     }
-
     if (index == 1) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const SmartAssistantScreen()),
-      );
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const SmartAssistantScreen()));
       return;
     }
-
     if (index == 2) {
       Navigator.pushNamed(context, '/favorites');
       return;
     }
-
     if (index == 3) {
       Navigator.pushNamed(context, '/profile');
       return;
     }
   }
 
+  //-------------- Category Tap ----------------
   void _onCategorySelected(int index) {
-    setState(() {
-      _selectedCategoryIndex = index;
-    });
+    setState(() => _selectedCategoryIndex = index);
 
     final categoryName = categories[index];
 
     if (categoryName == "معالم") {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const LandmarksScreen()),
-      );
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const LandmarksScreen()));
     } else if (categoryName == "ممالك") {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const KingdomsScreen()),
-      );
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const KingdomsScreen()));
     } else if (categoryName == "آثار") {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const AntiquitiesScreen()),
-      );
+      Navigator.push(context, MaterialPageRoute(builder: (_) => const AntiquitiesScreen()));
     }
   }
 
+  // ================================================================
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: _buildDrawer(),
       backgroundColor: Colors.white,
 
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        title: Align(
-          alignment: Alignment.centerLeft,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(
-                '𐩱𐩡𐩣𐩬',
-                style: const TextStyle(
-                  fontFamily: 'OldSouthArabian',
-                  fontSize: 25,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFFD4A017),
-                ),
-              ),
-              const SizedBox(height: 2),
-              const Text(
-                'الموسوعة الذكية في تاريخ اليمن القديم',
-                style: TextStyle(
-                  fontSize: 10,
-                  color: Colors.black54,
-                ),
-              ),
-            ],
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: Icon(Icons.menu, color: primary),
+            onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
+        centerTitle: true,
+        title: Column(
+          children: [
+            Text(
+              '𐩱𐩡𐩣𐩬',
+              style: const TextStyle(
+                fontFamily: 'OldSouthArabian',
+                fontSize: 28,
+                color: Color(0xFFD4A017),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const Text(
+              'الموسوعة الذكية في تاريخ اليمن القديم',
+              style: TextStyle(fontSize: 11, color: Colors.black54),
+            )
+          ],
+        ),
         actions: [
-          Row(
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.search, color: Colors.black),
-                  onPressed: () {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      backgroundColor: Colors.transparent,
-                      builder: (_) => const SearchScreen(),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(width: 4),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  shape: BoxShape.circle,
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.language, color: Colors.black),
-                  onPressed: () {},
-                ),
-              ),
-            ],
+          IconButton(
+            icon: Icon(Icons.search, color: primary),
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (_) => const SearchScreen(),
+              );
+            },
           ),
           const SizedBox(width: 8),
         ],
@@ -173,20 +147,20 @@ class _HomeScreenState extends State<HomeScreen> {
       body: IndexedStack(
         index: _selectedNavIndex,
         children: [
-          _buildHomePageContent(),
-          const Center(child: Text("المساعد الذكي")),
-          const Center(child: Text("المفضلة")),
-          const Center(child: Text("الملف الشخصي")),
+          _buildHomeContent(),
+          const SizedBox(),
+          const SizedBox(),
+          const SizedBox(),
         ],
       ),
 
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.white,
-        selectedItemColor: AppColors.primary,
         currentIndex: _selectedNavIndex,
-        onTap: _onNavItemTapped,
+        selectedItemColor: primary,
+        unselectedItemColor: Colors.black54,
+        backgroundColor: Colors.white,
         type: BottomNavigationBarType.fixed,
-        unselectedItemColor: AppColors.textDark.withOpacity(0.6),
+        onTap: _onNavItemTapped,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: "الرئيسية"),
           BottomNavigationBarItem(icon: Icon(Icons.mic), label: "المساعد الذكي"),
@@ -197,212 +171,226 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildHomePageContent() {
+  // ================================================================
+  Widget _buildHomeContent() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           _imageSlider(),
+          const SizedBox(height: 25),
+          _buildCategories(),
           const SizedBox(height: 20),
-
-          SizedBox(
-            height: 40,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              reverse: true,
-              itemCount: categories.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
-              itemBuilder: (context, index) {
-                final selected = _selectedCategoryIndex == index;
-                return GestureDetector(
-                  onTap: () => _onCategorySelected(index),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: selected ? AppColors.primary : Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.primary),
-                    ),
-                    child: Text(
-                      categories[index],
-                      style: TextStyle(
-                        color: selected ? Colors.white : AppColors.textDark,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(height: 15),
-
-          SizedBox(
-            height: (filteredPlaces.length / 2).ceil() * 260.0,
-            child: GridView.builder(
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: filteredPlaces.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: 0.78,
-              ),
-              itemBuilder: (context, index) {
-                final place = filteredPlaces[index];
-                return GestureDetector(
-                  onTap: () async {
-                    try {
-                      List<Content> allContents = await ContentService.fetchContents();
-                      Content? selectedContent = allContents.firstWhere(
-                            (content) => content.title == place['title'],
-                        orElse: () => throw Exception("المحتوى غير موجود"),
-                      );
-
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ContentDetailsScreen(contentId: selectedContent.id),
-                        ),
-                      );
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("حدث خطأ أثناء جلب المحتوى: $e")),
-                      );
-                    }
-                  },
-                  child: _placeCard(
-                    image: place['image']!,
-                    title: place['title']!,
-                    location: place['location']!,
-                  ),
-                );
-              },
-            ),
-          ),
+          _buildPlacesGrid(),
         ],
       ),
     );
   }
 
-  // بقية وظائف السلايدر والكارد تبقى كما هي
+  // --------------------- Slider ------------------------
   Widget _imageSlider() {
     return Column(
       children: [
         SizedBox(
-          height: 250,
+          height: 230,
           child: PageView.builder(
             itemCount: sliderImages.length,
-            onPageChanged: (index) {
-              setState(() => _currentPage = index);
-            },
-            itemBuilder: (context, index) {
-              return _sliderImageCard(
-                imagePath: sliderImages[index],
-                isArtifact: index == 0,
-              );
-            },
+            onPageChanged: (index) => setState(() => _currentPage = index),
+            itemBuilder: (_, index) => _sliderCard(sliderImages[index]),
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(
             sliderImages.length,
-                (index) => _dot(isCurrent: _currentPage == index),
+                (i) => AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              margin: const EdgeInsets.symmetric(horizontal: 3),
+              width: _currentPage == i ? 22 : 6,
+              height: 6,
+              decoration: BoxDecoration(
+                color: _currentPage == i ? primary : Colors.grey[300],
+                borderRadius: BorderRadius.circular(3),
+              ),
+            ),
           ),
-        ),
+        )
       ],
     );
   }
 
-  Widget _sliderImageCard({required String imagePath, required bool isArtifact}) {
+  Widget _sliderCard(String img) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 5),
+      margin: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
+            color: Colors.black.withOpacity(0.12),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          )
         ],
       ),
-      child: Stack(
-        alignment: Alignment.bottomCenter,
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-            child: Image.asset(
-              imagePath,
-              height: 250,
-              width: double.infinity,
-              fit: BoxFit.cover,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Image.asset(img, fit: BoxFit.cover),
+      ),
+    );
+  }
+
+  // ---------------- Categories -------------------------
+  Widget _buildCategories() {
+    return SizedBox(
+      height: 40,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        reverse: true,
+        itemCount: categories.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        itemBuilder: (_, index) {
+          final isSelected = _selectedCategoryIndex == index;
+          return GestureDetector(
+            onTap: () => _onCategorySelected(index),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: isSelected ? primary : Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: primary),
+              ),
+              child: Text(
+                categories[index],
+                style: TextStyle(
+                  color: isSelected ? Colors.white : primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }
 
-  static Widget _dot({required bool isCurrent}) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      margin: const EdgeInsets.symmetric(horizontal: 4.0),
-      height: 6,
-      width: isCurrent ? 25 : 6,
-      decoration: BoxDecoration(
-        color: isCurrent ? AppColors.primary : Colors.grey[400],
-        borderRadius: BorderRadius.circular(3),
+  // ---------------- Places Grid -------------------------
+  Widget _buildPlacesGrid() {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: filteredPlaces.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: .78,
       ),
+      itemBuilder: (_, index) {
+        final place = filteredPlaces[index];
+        return GestureDetector(
+          onTap: () async {
+            try {
+              List<Content> allContents = await ContentService.fetchContents();
+              Content selected = allContents.firstWhere(
+                    (c) => c.title == place['title'],
+              );
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ContentDetailsScreen(contentId: selected.id),
+                ),
+              );
+            } catch (_) {}
+          },
+          child: _placeCard(place),
+        );
+      },
     );
   }
 
-  Widget _placeCard({
-    required String image,
-    required String title,
-    required String location,
-  }) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 250),
+  Widget _placeCard(Map<String, String> place) {
+    return Container(
       decoration: BoxDecoration(
-        color: _cardColor,
-        borderRadius: BorderRadius.circular(15),
+        color: const Color(0xFFFAF5F3),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2)),
+          BoxShadow(color: Colors.black.withOpacity(.07), blurRadius: 8),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
-            child: Image.asset(
-              image,
-              height: 100,
-              width: double.infinity,
-              fit: BoxFit.cover,
-            ),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            child: Image.asset(place['image']!, height: 110, width: double.infinity, fit: BoxFit.cover),
           ),
           Padding(
             padding: const EdgeInsets.all(8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(title,
-                    style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textDark)),
+                Text(place['title']!, style: const TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 4),
-                Text(location,
-                    style: TextStyle(color: AppColors.textDark.withOpacity(0.6), fontSize: 12)),
+                Text(
+                  place['location']!,
+                  style: TextStyle(fontSize: 12, color: Colors.black54),
+                )
               ],
             ),
-          ),
+          )
         ],
+      ),
+    );
+  }
+
+  // ---------------- Drawer UI -------------------------
+  Widget _buildDrawer() {
+    return Drawer(
+      child: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          children: [
+            const SizedBox(height: 10),
+            Center(
+              child: Text(
+                "القائمة الرئيسية",
+                style: TextStyle(
+                    fontSize: 20, fontWeight: FontWeight.bold, color: primary),
+              ),
+            ),
+            const Divider(),
+
+            _buildDrawerItem(icon: Icons.home, label: "الرئيسية", onTap: () {}),
+            _buildDrawerItem(icon: Icons.mic, label: "المساعد الذكي", onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const SmartAssistantScreen()));
+            }),
+            _buildDrawerItem(icon: Icons.account_balance, label: "الممالك", onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const KingdomsScreen()));
+            }),
+            _buildDrawerItem(icon: Icons.mosque, label: "المعالم", onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const LandmarksScreen()));
+            }),
+            _buildDrawerItem(icon: Icons.architecture, label: "الآثار", onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const AntiquitiesScreen()));
+            }),
+            _buildDrawerItem(icon: Icons.favorite, label: "المفضلة", onTap: () {
+              Navigator.pushNamed(context, '/favorites');
+            }),
+            _buildDrawerItem(icon: Icons.notifications, label: "الإشعارات", onTap: () {}),
+            _buildDrawerItem(icon: Icons.support, label: "الدعم والتواصل", onTap: () {}),
+            _buildDrawerItem(icon: Icons.language, label: "تغيير اللغة", onTap: () {}),
+            _buildDrawerItem(icon: Icons.dark_mode, label: "الوضع الداكن", onTap: () {}),
+            _buildDrawerItem(icon: Icons.info, label: "حول التطبيق", onTap: () {
+              Navigator.pushNamed(context, '/about_app');
+            }),
+            _buildDrawerItem(icon: Icons.policy, label: "سياسة الخصوصية", onTap: () {}),
+            _buildDrawerItem(icon: Icons.logout, label: "تسجيل الخروج", onTap: () {}),
+          ],
+        ),
       ),
     );
   }

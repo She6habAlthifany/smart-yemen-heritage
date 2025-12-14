@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/app_controller.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/providers/settings_provider.dart';
 import '../../core/settings/settings_controller.dart';
 
 const Color _primaryColor = Color(0xFFCD853F);
@@ -96,16 +97,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 8),
 
           SwitchListTile(
-            value: AppController.themeMode.value == ThemeMode.dark,
-            title: const Text('الوضع المظلم'),
-            onChanged: (v) {
-              AppController.toggleTheme(v);
-              try { settings?.setDarkMode(v); } catch (_) {}
-              setState(() {});
-              Navigator.pop(context);
-            },
-            secondary: const Icon(Icons.dark_mode, color: _primaryColor),
+            value: context.watch<SettingsProvider>().isDarkMode,
+            title: const Text('الوضع الداكن'),
+            onChanged: (value) => context.read<SettingsProvider>().toggleDarkMode(),
+            secondary: const Icon(Icons.dark_mode),
           ),
+
 
           ListTile(
             leading: const Icon(Icons.language, color: _primaryColor),

@@ -1,16 +1,15 @@
-// lib/features/auth/login/login_page.dart
-
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../../../core/constants/app_colors.dart';
-import '../../../services/auth_service.dart'; // 💡 الاستخدام الصحيح للخدمة
+import '../../../services/auth_service.dart';
 import '../../home/home_screen.dart';
 import '../signup/signup_screen.dart';
 import '../forgot_password/forgot_password_screen.dart';
+import '../../../core/providers/settings_provider.dart';
 
-// تعريف لون الخلفية البيج الفاتح الذي سيستخدم الآن كخلفية للحقول
+// لون الحقول الفاتح (يبقى كما في مشروعك)
 const Color _fieldsBackgroundColor = Color(0xFFFBF8F0);
 
 class LoginPage extends StatefulWidget {
@@ -34,11 +33,8 @@ class _LoginPageState extends State<LoginPage> {
   void initState() {
     super.initState();
     _loadSavedLogin();
-    // 🧹 يمكنك تفعيل هذا السطر مؤقتاً مرة واحدة للمسح الشامل:
-    // AuthService.clearAllPrefs();
   }
 
-  // دالة تحميل بيانات "تذكرني"
   Future<void> _loadSavedLogin() async {
     final prefs = await SharedPreferences.getInstance();
     final savedEmail = prefs.getString("saved_email");
@@ -54,7 +50,6 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  // دالة حفظ بيانات "تذكرني"
   Future<void> _saveLoginData() async {
     final prefs = await SharedPreferences.getInstance();
     if (rememberMe) {
@@ -68,9 +63,6 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  // ===============================================
-  // 🚀 دالة تسجيل الدخول المُعدَّلة لاستخدام AuthService
-  // ===============================================
   Future<void> loginUser() async {
     if (!_formKey.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
@@ -81,34 +73,26 @@ class _LoginPageState extends State<LoginPage> {
     final password = passwordController.text.trim();
 
     try {
-      // 💡 الخطوة الحاسمة: استخدام دالة login المصححة في AuthService
       final result = await AuthService().login(email, password);
 
       if (result['success'] == true) {
-        // حفظ بيانات "تذكرني" فقط، دون حفظ التوكن (الذي تم حفظه بالفعل داخل AuthService)
         await _saveLoginData();
-
-        // 💡 جلب اسم المستخدم من الرد للترحيب به
         final userName = result['data']['user']['user_name'] as String;
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("تم تسجيل الدخول بنجاح 🎉")),
         );
 
-        // 💡 يجب الانتظار لضمان أن كل العمليات غير المتزامنة قد تمت
         await Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => HomeScreen(
-              userName: userName,
-            ),
+            builder: (context) => HomeScreen(userName: userName),
           ),
         );
       } else {
-        // في حالة فشل التسجيل (Status != 200 أو missing token/userId)
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result["message"] ?? "فشل تسجيل الدخول. تحقق من بياناتك."),
+            content: Text(result["message"] ?? "فشل تسجيل الدخول"),
             backgroundColor: Colors.red,
           ),
         );
@@ -121,7 +105,6 @@ class _LoginPageState extends State<LoginPage> {
         ),
       );
     } catch (e) {
-      print('Login Error: $e'); // طباعة الخطأ في الـ Console
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("خطأ غير متوقع في الاتصال بالسيرفر"),
@@ -133,212 +116,294 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => isLoading = false);
   }
 
+  // تحكم بعرض البطاقة responsive
+  double _cardMaxWidth(BuildContext context) {
+    final w = MediaQuery.of(context).size.width;
+    if (w > 1100) return 680;
+    if (w > 800) return 600;
+    if (w > 600) return 520;
+    if (w > 420) return 380;
+    return w - 32;
+  }
 
-  // ===============================
-  // UI
-  // ===============================
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Form(
-            key: _formKey,
-            child: Column(
+    final settings = Provider.of<SettingsProvider>(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = settings.isDarkMode;
+
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        backgroundColor: isDark ? Colors.black : colorScheme.background,
+        body: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: _cardMaxWidth(context)),
+                child: _buildCard(context, colorScheme, isDark),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCard(BuildContext context, ColorScheme cs, bool isDark) {
+    final surfaceColor = isDark ? const Color(0xFF0B0B0B) : cs.surface;
+    final textColor = isDark ? Colors.white : cs.onSurface;
+
+    return Card(
+      elevation: 8,
+      color: surfaceColor,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Header row: icon + title
+            Row(
               children: [
-                const SizedBox(height: 40),
-                // Logo Circle
                 Container(
-                  height: 70,
-                  width: 70,
+                  height: 46,
+                  width: 46,
                   decoration: BoxDecoration(
                     color: AppColors.primary,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.primary.withOpacity(0.3),
-                        blurRadius: 12,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  child:
-                  const Icon(Icons.person, color: Colors.white, size: 35),
+                  child: const Icon(Icons.auto_stories, color: Colors.white),
                 ),
-
-                const SizedBox(height: 15),
-
-                const Text(
-                  "تسجيل الدخول",
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF4A4A4A),
-                  ),
-                ),
-
-                const SizedBox(height: 30),
-
-                // EMAIL
-                TextFormField(
-                  controller: emailController,
-                  textAlign: TextAlign.right,
-                  decoration: InputDecoration(
-                    labelText: "البريد الإلكتروني",
-                    prefixIcon: Icon(Icons.email, color: AppColors.primary),
-                    filled: true,
-                    fillColor: _fieldsBackgroundColor,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide(color: AppColors.primary, width: 2),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    "الموسوعة الذكية لتاريخ اليمن القديم",
+                    style: TextStyle(
+                      color: textColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return "الرجاء إدخال البريد الإلكتروني";
-                    }
-                    final emailRegex =
-                    RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$');
-                    if (!emailRegex.hasMatch(value)) {
-                      return "البريد الإلكتروني غير صالح";
-                    }
-                    return null;
-                  },
-                ),
-
-                const SizedBox(height: 15),
-
-                // PASSWORD
-                TextFormField(
-                  controller: passwordController,
-                  obscureText: _obscurePassword,
-                  decoration: InputDecoration(
-                    labelText: "كلمة المرور",
-                    prefixIcon: Icon(Icons.lock, color: AppColors.primary),
-                    filled: true,
-                    fillColor: _fieldsBackgroundColor,
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                        color: AppColors.primary,
-                      ),
-                      onPressed: () {
-                        setState(() => _obscurePassword = !_obscurePassword);
-                      },
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide(color: Colors.grey.shade300),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide(color: AppColors.primary, width: 2),
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return "الرجاء إدخال كلمة المرور";
-                    }
-                    if (value.length < 6) {
-                      return "كلمة المرور يجب أن تكون 6 أحرف على الأقل";
-                    }
-                    return null;
-                  },
-                ),
-
-                const SizedBox(height: 10),
-
-                // Remember Me
-                Row(
-                  children: [
-                    Checkbox(
-                      value: rememberMe,
-                      onChanged: (value) {
-                        setState(() => rememberMe = value!);
-                      },
-                      activeColor: AppColors.primary,
-                    ),
-                    const Text("تذكرني", style: TextStyle(fontSize: 16)),
-                    const Spacer(),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const ForgotPasswordScreen())
-                        );
-                      },
-                      child: Text(
-                        "نسيت كلمة المرور؟",
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 10),
-
-                // Login Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 50,
-                  child: ElevatedButton(
-                    onPressed: isLoading ? null : loginUser,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text(
-                      "تسجيل الدخول",
-                      style: TextStyle(fontSize: 18, color: Colors.white),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 15),
-
-                // Signup Navigation
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("ليس لديك حساب؟ "),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const SignupScreen(),
-                          ),
-                        );
-                      },
-                      child: Text(
-                        "إنشاء حساب",
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),
-          ),
+
+            const SizedBox(height: 18),
+
+            Text(
+              "مرحباً بك مجدداً",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: textColor,
+              ),
+            ),
+
+            const SizedBox(height: 6),
+
+            Text(
+              "سجل دخولك لمتابعة رحلتك عبر صفحات التاريخ",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: isDark ? Colors.grey.shade300 : Colors.grey.shade700,
+              ),
+            ),
+
+            const SizedBox(height: 22),
+
+            Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  // البريد الإلكتروني
+                  TextFormField(
+                    controller: emailController,
+                    textAlign: TextAlign.right,
+                    style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                    decoration: InputDecoration(
+                      labelText: "البريد الإلكتروني",
+                      labelStyle: TextStyle(color: isDark ? Colors.grey.shade300 : Colors.grey),
+                      prefixIcon: Icon(Icons.email, color: AppColors.primary),
+                      filled: true,
+                      fillColor: isDark ? const Color(0xFF151515) : _fieldsBackgroundColor,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: AppColors.primary, width: 2),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return "الرجاء إدخال البريد الإلكتروني";
+                      return null;
+                    },
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // كلمة المرور
+                  TextFormField(
+                    controller: passwordController,
+                    obscureText: _obscurePassword,
+                    textAlign: TextAlign.right,
+                    style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                    decoration: InputDecoration(
+                      labelText: "كلمة المرور",
+                      labelStyle: TextStyle(color: isDark ? Colors.grey.shade300 : Colors.grey),
+                      prefixIcon: Icon(Icons.lock, color: AppColors.primary),
+                      filled: true,
+                      fillColor: isDark ? const Color(0xFF151515) : _fieldsBackgroundColor,
+                      suffixIcon: IconButton(
+                        icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: AppColors.primary),
+                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                      ),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: AppColors.primary, width: 2),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) return "الرجاء إدخال كلمة المرور";
+                      if (value.length < 6) return "كلمة المرور يجب أن تكون 6 أحرف على الأقل";
+                      return null;
+                    },
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // remember + forgot
+            Row(
+              children: [
+                Checkbox(
+                  value: rememberMe,
+                  onChanged: (v) => setState(() => rememberMe = v ?? false),
+                  activeColor: AppColors.primary,
+                  side: BorderSide(color: isDark ? Colors.grey.shade700 : Colors.grey),
+                ),
+                const Text("تذكرني"),
+                const Spacer(),
+                GestureDetector(
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ForgotPasswordScreen())),
+                  child: Text("نسيت كلمة المرور؟", style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            // زر الدخول
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: isLoading ? null : loginUser,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 4,
+                ),
+                child: isLoading
+                    ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.2))
+                    : const Text("تسجيل الدخول", style: TextStyle(fontSize: 16, color: Colors.white)),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // divider with text
+            Row(
+              children: [
+                Expanded(child: Divider(color: isDark ? Colors.grey.shade800 : Colors.grey.shade300)),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  child: Text("أو تابع باستخدام", style: TextStyle(color: isDark ? Colors.grey.shade300 : Colors.grey)),
+                ),
+                Expanded(child: Divider(color: isDark ? Colors.grey.shade800 : Colors.grey.shade300)),
+              ],
+            ),
+
+            const SizedBox(height: 14),
+
+            // Google button (outline style)
+            SizedBox(
+              height: 46,
+              child: OutlinedButton(
+                onPressed: () {
+                  // TODO: تنفيذ Google Sign-In
+                },
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: isDark ? Colors.grey.shade700 : Colors.grey.shade300),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  backgroundColor: isDark ? const Color(0xFF0A0A0A) : Colors.white,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    Icon(Icons.g_mobiledata, size: 28),
+                    SizedBox(width: 10),
+                    Text("متابعة باستخدام Google"),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // Guest (text)
+            Center(
+              child: GestureDetector(
+                onTap: () {
+                  // TODO: دخول كزائر
+                },
+                child: Text("الدخول كزائر", style: TextStyle(decoration: TextDecoration.underline, color: isDark ? Colors.grey.shade200 : Colors.black87)),
+              ),
+            ),
+
+            const SizedBox(height: 18),
+
+            // Signup row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text("ليس لديك حساب؟ "),
+                GestureDetector(
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SignupScreen())),
+                  child: Text("إنشاء حساب", style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 12),
+
+            // Dark mode switch using SettingsProvider
+            Center(
+              child: Consumer<SettingsProvider>(
+                builder: (context, settingsProv, _) {
+                  return Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text("الوضع الداكن"),
+                      const SizedBox(width: 8),
+                      Switch(
+                        value: settingsProv.isDarkMode,
+                        onChanged: (v) async {
+                          await settingsProv.setDarkMode(v);
+                        },
+                        activeColor: AppColors.primary,
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
